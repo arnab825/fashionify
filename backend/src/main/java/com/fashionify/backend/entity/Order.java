@@ -1,0 +1,55 @@
+package com.fashionify.backend.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "orders")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    private String cartId; // To track original cart if needed
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    @Embedded
+    private OrderAddress addressInfo;
+
+    private String orderStatus;
+    private String paymentMethod;
+    private String paymentStatus;
+    private Double totalAmount;
+    
+    private LocalDateTime orderDate;
+    private LocalDateTime orderUpdateDate;
+    
+    private String paymentId;
+    private String payerId;
+
+    public void addOrderItem(OrderItem item) {
+        orderItems.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeOrderItem(OrderItem item) {
+        orderItems.remove(item);
+        item.setOrder(null);
+    }
+}
