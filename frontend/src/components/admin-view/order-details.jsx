@@ -43,7 +43,7 @@ function AdminOrderDetailsView({ orderDetails }) {
   }
 
   return (
-    <DialogContent className="sm:max-w-[600px]">
+    <DialogContent aria-describedby={undefined} className="sm:max-w-[600px]">
       <div className="grid gap-6">
         <div className="grid gap-2">
           <div className="flex mt-6 items-center justify-between">
@@ -52,11 +52,15 @@ function AdminOrderDetailsView({ orderDetails }) {
           </div>
           <div className="flex mt-2 items-center justify-between">
             <p className="font-medium">Order Date</p>
-            <Label>{orderDetails?.orderDate.split("T")[0]}</Label>
+            <Label>
+              {Array.isArray(orderDetails?.orderDate)
+                ? `${orderDetails.orderDate[0]}-${String(orderDetails.orderDate[1]).padStart(2, '0')}-${String(orderDetails.orderDate[2]).padStart(2, '0')}`
+                : orderDetails?.orderDate?.split("T")[0] || 'N/A'}
+            </Label>
           </div>
           <div className="flex mt-2 items-center justify-between">
             <p className="font-medium">Order Price</p>
-            <Label>${orderDetails?.totalAmount}</Label>
+            <Label>₹{orderDetails?.totalAmount}</Label>
           </div>
           <div className="flex mt-2 items-center justify-between">
             <p className="font-medium">Payment method</p>
@@ -88,12 +92,12 @@ function AdminOrderDetailsView({ orderDetails }) {
           <div className="grid gap-2">
             <div className="font-medium">Order Details</div>
             <ul className="grid gap-3">
-              {orderDetails?.cartItems && orderDetails?.cartItems.length > 0
-                ? orderDetails?.cartItems.map((item) => (
-                    <li className="flex items-center justify-between">
-                      <span>Title: {item.title}</span>
+              {orderDetails?.orderItems && orderDetails?.orderItems.length > 0
+                ? orderDetails?.orderItems.map((item) => (
+                    <li className="flex items-center justify-between" key={item.id || item.title}>
+                      <span>Title: {item.title || item.product?.title || 'Product'}</span>
                       <span>Quantity: {item.quantity}</span>
-                      <span>Price: ${item.price}</span>
+                      <span>Price: ₹{item.price}</span>
                     </li>
                   ))
                 : null}

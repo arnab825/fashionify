@@ -79,6 +79,12 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action) => {},
+    setAvatar: (state, action) => {
+      if (state.user) {
+        state.user.avatar = action.payload;
+        sessionStorage.setItem("userAvatar", action.payload);
+      }
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -102,7 +108,7 @@ const authSlice = createSlice({
         console.log(action);
 
         state.isLoading = false;
-        state.user = action.payload.success ? action.payload.user : null;
+        state.user = action.payload.success ? { ...action.payload.user, avatar: sessionStorage.getItem("userAvatar") || null } : null;
         state.isAuthenticated = action.payload.success;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -115,7 +121,7 @@ const authSlice = createSlice({
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.success ? action.payload.user : null;
+        state.user = action.payload.success ? { ...action.payload.user, avatar: sessionStorage.getItem("userAvatar") || null } : null;
         state.isAuthenticated = action.payload.success;
       })
       .addCase(checkAuth.rejected, (state, action) => {
@@ -131,5 +137,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser } = authSlice.actions;
+export const { setUser, setAvatar } = authSlice.actions;
 export default authSlice.reducer;

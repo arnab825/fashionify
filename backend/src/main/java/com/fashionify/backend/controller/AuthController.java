@@ -53,13 +53,16 @@ public class AuthController {
                     .body(new MessageResponse(false, "Error: Username is already taken!"));
         }
 
+        long userCount = userRepository.count();
+        String role = (userCount == 0) ? "admin" : "user";
+
         // Create new user's account
         User user = new User(
                 null,
                 signUpRequest.getUserName(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()),
-                "user", // Default role
+                role, // Dynamic role: first user gets admin
                 null,
                 null
         );

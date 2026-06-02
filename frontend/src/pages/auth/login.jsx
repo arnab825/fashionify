@@ -5,6 +5,7 @@ import { loginUser } from "@/store/auth-slice";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const initialState = {
   email: "",
@@ -23,11 +24,11 @@ function AuthLogin() {
     dispatch(loginUser(formData)).then((data) => {
       if (data?.payload?.success) {
         toast({
-          title: data?.payload?.message,
+          title: data?.payload?.message || "Login successful",
         });
       } else {
         toast({
-          title: data?.payload?.message,
+          title: data?.payload?.message || "Login failed. Please check your credentials.",
           variant: "destructive",
         });
       }
@@ -35,16 +36,22 @@ function AuthLogin() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background w-full px-4">
-      <div className="mx-auto w-full max-w-md space-y-6 bg-card p-8 rounded-xl shadow-lg border border-border">
+    <div className="w-full max-w-md relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10 pointer-events-none rounded-2xl" />
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative z-10 w-full space-y-6 card-gradient card-gradient-hover p-8 rounded-2xl shadow-xl border-t-4 border-t-purple-500/30"
+      >
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-card-foreground">
+          <h1 className="text-4xl font-extrabold tracking-tight text-gradient">
             Welcome Back
           </h1>
           <p className="text-sm text-muted-foreground">
             Don't have an account?
             <Link
-              className="font-semibold ml-2 text-primary hover:underline transition-all"
+              className="font-semibold ml-2 text-purple-600 dark:text-purple-400 hover:underline transition-all underline-offset-4"
               to="/auth/register"
             >
               Sign Up
@@ -59,7 +66,7 @@ function AuthLogin() {
           onSubmit={onSubmit}
           isLoading={isLoading}
         />
-      </div>
+      </motion.div>
     </div>
   );
 }

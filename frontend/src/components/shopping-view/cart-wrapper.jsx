@@ -11,9 +11,9 @@ function UserCartWrapper({ cartItems, setOpenCartSheet }) {
       ? cartItems.reduce(
           (sum, currentItem) =>
             sum +
-            (currentItem?.salePrice > 0
-              ? currentItem?.salePrice
-              : currentItem?.price) *
+            (currentItem?.product?.salePrice > 0
+              ? currentItem?.product?.salePrice
+              : currentItem?.product?.price) *
               currentItem?.quantity,
           0
         )
@@ -32,7 +32,7 @@ function UserCartWrapper({ cartItems, setOpenCartSheet }) {
       <div className="mt-8 space-y-4">
         <div className="flex justify-between">
           <span className="font-bold">Total</span>
-          <span className="font-bold">${totalCartAmount}</span>
+          <span className="font-bold">₹{totalCartAmount}</span>
         </div>
       </div>
       <Button

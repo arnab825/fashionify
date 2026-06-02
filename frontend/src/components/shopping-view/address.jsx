@@ -114,17 +114,18 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
   return (
     <Card>
       <div className="mb-5 p-3 grid grid-cols-1 sm:grid-cols-2  gap-2">
-        {addressList && addressList.length > 0
-          ? addressList.map((singleAddressItem) => (
-              <AddressCard
-                selectedId={selectedId}
-                handleDeleteAddress={handleDeleteAddress}
-                addressInfo={singleAddressItem}
-                handleEditAddress={handleEditAddress}
-                setCurrentSelectedAddress={setCurrentSelectedAddress}
-              />
-            ))
-          : null}
+            {addressList && addressList.length > 0
+              ? addressList.map((singleAddressItem) => (
+                  <AddressCard
+                    key={singleAddressItem?.id}
+                    selectedId={selectedId}
+                    handleDeleteAddress={handleDeleteAddress}
+                    addressInfo={singleAddressItem}
+                    handleEditAddress={handleEditAddress}
+                    setCurrentSelectedAddress={setCurrentSelectedAddress}
+                  />
+                ))
+              : null}
       </div>
       <CardHeader>
         <CardTitle>

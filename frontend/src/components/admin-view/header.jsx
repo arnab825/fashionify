@@ -1,29 +1,56 @@
-import { AlignJustify, LogOut } from "lucide-react";
+import { AlignJustify, LogOut, Store, Sun, Moon } from "lucide-react";
 import { Button } from "../ui/button";
-import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "@/store/auth-slice";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-function AdminHeader({ setOpen }) {
+function AdminHeader({ setOpen, isDarkMode, setIsDarkMode }) {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   function handleLogout() {
     dispatch(logoutUser());
   }
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-background border-b">
-      <Button onClick={() => setOpen(true)} className="lg:hidden sm:block">
-        <AlignJustify />
+    <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-border sticky top-0 z-40">
+      <Button variant="outline" size="icon" onClick={() => setOpen(true)} className="lg:hidden sm:flex">
+        <AlignJustify className="h-5 w-5" />
         <span className="sr-only">Toggle Menu</span>
       </Button>
-      <div className="flex flex-1 justify-end">
+      <div className="flex flex-1 justify-end gap-4 items-center">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsDarkMode(!isDarkMode)}
+        >
+          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => navigate("/shop/home")}
+          className="gap-2 font-medium"
+        >
+          <Store className="h-4 w-4" />
+          View Store
+        </Button>
         <Button
           onClick={handleLogout}
-          className="inline-flex gap-2 items-center rounded-md px-4 py-2 text-sm font-medium shadow"
+          className="gap-2 font-medium"
         >
-          <LogOut />
+          <LogOut className="h-4 w-4" />
           Logout
         </Button>
+        <Avatar className="cursor-pointer border-2 border-border ml-2">
+          {user?.avatar && (
+            <AvatarImage src={`https://api.dicebear.com/9.x/micah/svg?seed=${user.avatar}&backgroundColor=transparent`} alt="User Avatar" />
+          )}
+          <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+            {user?.userName?.[0]?.toUpperCase() || "A"}
+          </AvatarFallback>
+        </Avatar>
       </div>
     </header>
   );

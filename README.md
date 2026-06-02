@@ -42,7 +42,17 @@ The project is structured as a monorepo containing two main folders:
 - MySQL Server
 
 ### 1. Database Setup
-Create a MySQL database named `fashionify`:
+You can either install MySQL locally or run it instantly via Docker.
+
+**Option A: Using Docker (Recommended)**
+If you have Docker Desktop installed, simply start the database container:
+```bash
+cd backend
+docker-compose up -d mysql
+```
+
+**Option B: Manual MySQL Installation**
+Create a MySQL database named `fashionify` in your local MySQL server:
 ```sql
 CREATE DATABASE fashionify;
 ```
@@ -58,9 +68,13 @@ Ensure you have the correct variables in your `.env` file (or `application.prope
 - `cloudinary.cloud-name`, `api-key`, `api-secret`
 - `jwt.secret`
 
-Start the Spring Boot server:
+Start the Spring Boot server using the bundled Maven Wrapper (no global Maven installation required):
 ```bash
+# On Mac/Linux:
 ./mvnw spring-boot:run
+
+# On Windows:
+.\mvnw.cmd spring-boot:run
 ```
 *Note: The backend runs on `http://localhost:8080` by default.*
 
