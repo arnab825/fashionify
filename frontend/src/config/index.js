@@ -39,6 +39,14 @@ export const loginFormControls = [
   },
 ];
 
+export const sizeOptionsByCategory = {
+  men: ["XS", "S", "M", "L", "XL", "XXL"],
+  women: ["XS", "S", "M", "L", "XL", "XXL"],
+  kids: ["2Y (86cm)", "4Y (98cm)", "6Y (110cm)", "8Y (122cm)", "10Y (134cm)", "12Y (146cm)"],
+  footwear: ["UK 5", "UK 6", "UK 7", "UK 8", "UK 9", "UK 10", "UK 11"],
+  accessories: ["One Size", "S/M", "M/L"],
+};
+
 export const addProductFormElements = [
   {
     label: "Title",
@@ -92,14 +100,8 @@ export const addProductFormElements = [
     type: "number",
     placeholder: "Enter sale price (optional)",
   },
-  {
-    label: "Total Stock",
-    name: "totalStock",
-    componentType: "input",
-    type: "number",
-    placeholder: "Enter total stock",
-  },
 ];
+
 
 export const shoppingViewHeaderMenuItems = [
   {

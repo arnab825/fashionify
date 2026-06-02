@@ -26,4 +26,7 @@ public class OrderItem {
     private String image;
     private String price;
     private Integer quantity;
+
+    // Size selected at time of purchase — preserved in order history
+    private String selectedSize;
 }

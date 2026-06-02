@@ -83,13 +83,15 @@ public class AuthController {
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        // Create cookie
         Cookie cookie = new Cookie("token", jwt);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // set to true in production with HTTPS
+        cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setMaxAge(60 * 60 * 24); // 24 hours
+        cookie.setMaxAge(60 * 60 * 24);
+        // SameSite=Lax allows the cookie to be sent on same-site navigations and top-level cross-site GET
         response.addCookie(cookie);
+        response.addHeader("Set-Cookie",
+            "token=" + jwt + "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
 
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("email", userDetails.getEmail());

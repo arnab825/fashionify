@@ -16,8 +16,15 @@ public class CloudinaryService {
     private Cloudinary cloudinary;
 
     public String uploadImage(MultipartFile file, String folderName) throws IOException {
-        Map<String, Object> options = ObjectUtils.asMap("folder", "fashionify/" + folderName);
-        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
-        return uploadResult.get("url").toString();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> options = ObjectUtils.asMap(
+            "folder", "fashionify/" + folderName,
+            "resource_type", "image"
+        );
+        @SuppressWarnings("unchecked")
+        Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+        // Use secure_url to get HTTPS; fall back to url if not present
+        Object secureUrl = uploadResult.get("secure_url");
+        return secureUrl != null ? secureUrl.toString() : uploadResult.get("url").toString();
     }
 }

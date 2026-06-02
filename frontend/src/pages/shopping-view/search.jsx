@@ -12,8 +12,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 function SearchProducts() {
-  const [keyword, setKeyword] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
   const dispatch = useDispatch();
   const { searchResults } = useSelector((state) => state.shopSearch);
   const { productDetails } = useSelector((state) => state.shopProducts);
@@ -25,16 +25,26 @@ function SearchProducts() {
   const { toast } = useToast();
   const navigate = useNavigate();
   useEffect(() => {
-    if (keyword && keyword.trim() !== "" && keyword.trim().length > 3) {
-      setTimeout(() => {
+    const timer = setTimeout(() => {
+      if (keyword && keyword.trim() !== "") {
         setSearchParams(new URLSearchParams(`?keyword=${keyword}`));
         dispatch(getSearchResults(keyword));
-      }, 1000);
-    } else {
-      setSearchParams(new URLSearchParams(`?keyword=${keyword}`));
-      dispatch(resetSearchResults());
-    }
+      } else {
+        setSearchParams(new URLSearchParams(`?keyword=${keyword}`));
+        dispatch(resetSearchResults());
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
   }, [keyword]);
+
+  // Sync state if URL changes from header search
+  useEffect(() => {
+    const urlKeyword = searchParams.get("keyword");
+    if (urlKeyword !== null && urlKeyword !== keyword) {
+      setKeyword(urlKeyword);
+    }
+  }, [searchParams]);
 
   function handleAddtoCart(getCurrentProductId, getTotalStock) {
     if (!isAuthenticated) {

@@ -7,7 +7,9 @@ Fashionify is a modern, full-stack e-commerce application featuring a sleek, dar
 - **Public Shop Browsing:** Guests can effortlessly browse products, search, and filter by categories and brands.
 - **Secure Authentication:** JWT-based authentication system with separate flows for customers and administrators.
 - **Shopping Cart & Checkout:** Seamless cart management and a secure checkout flow (integrated with Razorpay).
-- **Admin Dashboard:** A dedicated portal for administrators to manage products, view orders, and upload images.
+- **Real-World Product Management:** Products now support size variants (e.g., S, M, L or UK sizes) with individual stock limits, mimicking real e-commerce systems.
+- **Modern Search UI:** A modernized, vertical-style search bar with built-in throttling/debouncing for an ultra-smooth experience.
+- **Admin Dashboard:** A dedicated portal for administrators to manage products, sizes, stocks, view orders, and upload images seamlessly.
 - **Dark Mode UI:** A gorgeous, responsive, and dynamic interface built with TailwindCSS and Shadcn UI.
 - **Cloudinary Integration:** Efficient product image hosting and delivery via Cloudinary.
 
@@ -93,7 +95,7 @@ npm run dev
 ## 🔐 Default Admin Credentials
 When the backend initializes the database, it automatically creates a default admin account for you:
 - **Email:** `admin@gmail.com`
-- **Password:** `admin123`
+- **Password:** `demo`
 
 ## 📄 License
 This project is for educational and portfolio purposes.

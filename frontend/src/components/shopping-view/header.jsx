@@ -1,4 +1,4 @@
-import { HousePlug, LogOut, Menu, ShoppingCart, UserCog, Moon, Sun, ShieldCheck, Heart, Search } from "lucide-react";
+import { HousePlug, LogOut, Menu, ShoppingCart, UserCog, ShieldCheck, Heart, Search, User, Sun, Moon } from "lucide-react";
 import {
   Link,
   useLocation,
@@ -23,13 +23,51 @@ import UserCartWrapper from "./cart-wrapper";
 import { useEffect, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { fetchWishlistItems } from "@/store/shop/wishlist-slice";
-import { Label } from "../ui/label";
-import { useTheme } from "../theme-provider";
+import { Input } from "../ui/input";
+
+function SearchBar({ isMobile }) {
+  const [keyword, setKeyword] = useState("");
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === "/shop/search") {
+      setKeyword(searchParams.get("keyword") || "");
+    } else {
+      setKeyword("");
+    }
+  }, [location.pathname, searchParams]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentUrlKeyword = searchParams.get("keyword") || "";
+      if (keyword !== currentUrlKeyword && keyword.trim() !== "") {
+        navigate(`/shop/search?keyword=${encodeURIComponent(keyword)}`);
+      } else if (keyword === "" && currentUrlKeyword !== "" && location.pathname === "/shop/search") {
+        navigate(`/shop/search`);
+      }
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [keyword, navigate, location.pathname, searchParams]);
+
+  return (
+    <div className={`relative w-full ${isMobile ? "" : "max-w-xl"}`}>
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+      <Input
+        className="w-full bg-muted/70 border-transparent focus-visible:ring-1 focus-visible:ring-purple-500 pl-11 h-10 rounded-md shadow-sm"
+        placeholder="Search for products, brands and more"
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+      />
+    </div>
+  );
+}
 
 function MenuItems() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
 
   function handleNavigate(getCurrentMenuItem) {
     sessionStorage.removeItem("filters");
@@ -39,33 +77,30 @@ function MenuItems() {
       getCurrentMenuItem.id !== "search" &&
       getCurrentMenuItem.id !== "about" &&
       getCurrentMenuItem.id !== "contact"
-        ? {
-            category: [getCurrentMenuItem.id],
-          }
+        ? { category: [getCurrentMenuItem.id] }
         : null;
 
     sessionStorage.setItem("filters", JSON.stringify(currentFilter));
-
     location.pathname.includes("listing") && currentFilter !== null
-      ? setSearchParams(
-          new URLSearchParams(`?category=${getCurrentMenuItem.id}`)
-        )
+      ? setSearchParams(new URLSearchParams(`?category=${getCurrentMenuItem.id}`))
       : navigate(getCurrentMenuItem.path);
   }
 
   return (
-    <nav className="flex flex-col mb-3 lg:mb-0 lg:items-center gap-8 lg:flex-row">
+    <nav className="flex flex-col lg:flex-row gap-6 lg:items-center h-full">
       {shoppingViewHeaderMenuItems.map((menuItem) => (
         <button
-          onClick={() => handleNavigate(menuItem)}
-          className={`text-sm font-semibold tracking-wide cursor-pointer transition-all duration-300 relative py-1.5 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-gradient-to-r after:from-purple-500 after:to-pink-500 hover:after:w-full after:transition-all after:duration-300 ${
-            location.pathname.includes(menuItem.path)
-              ? "text-purple-600 dark:text-purple-400 after:w-full font-bold"
-              : "text-foreground/80 hover:text-purple-500 hover:-translate-y-[1px]"
-          }`}
           key={menuItem.id}
+          onClick={() => handleNavigate(menuItem)}
+          className="text-[13px] font-bold tracking-widest text-foreground/80 hover:text-purple-600 lg:uppercase relative flex items-center h-full group py-3 lg:py-0"
         >
           {menuItem.label}
+          {menuItem.badge && (
+            <span className="absolute -top-2 -right-7 text-[9px] font-bold text-pink-500 hidden lg:block">
+              {menuItem.badge}
+            </span>
+          )}
+          <div className="absolute bottom-0 left-0 w-full h-[4px] bg-purple-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-t-md hidden lg:block" />
         </button>
       ))}
     </nav>
@@ -80,8 +115,6 @@ function HeaderRightContent() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { theme, setTheme } = useTheme();
-  
   function handleLogout() {
     dispatch(logoutUser());
   }
@@ -93,57 +126,88 @@ function HeaderRightContent() {
     }
   }, [dispatch, isAuthenticated, user?.id]);
 
-  console.log(cartItems, "sangam");
-
   return (
-    <div className="flex lg:items-center lg:flex-row flex-col gap-4">
-      <div className="hidden lg:flex items-center text-sm font-semibold text-foreground/70 mr-2 bg-muted/50 px-3 py-1.5 rounded-full">
-        {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-        className="mr-1 hover:bg-muted dark:hover:bg-muted text-foreground/80 hover:text-foreground transition-colors rounded-full"
+    <div className="flex lg:items-center flex-row gap-6">
+      {/* Profile Icon with Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div className="flex flex-col items-center justify-center cursor-pointer group pt-1 outline-none">
+            {isAuthenticated ? (
+              <Avatar className="h-6 w-6 bg-purple-600 hover:bg-purple-700 shadow-md shadow-purple-500/30 transition-transform hover:scale-105 mb-0.5">
+                {user?.avatar && (
+                  <AvatarImage src={`https://api.dicebear.com/9.x/micah/svg?seed=${user.avatar}&backgroundColor=transparent`} alt="User Avatar" />
+                )}
+                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-[10px]">
+                  {user?.userName?.[0]?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <User className="h-5 w-5 text-foreground/90 group-hover:text-purple-600 transition-colors" />
+            )}
+            <span className="text-[11px] font-semibold mt-1 text-foreground/90 group-hover:text-purple-600 transition-colors hidden lg:block">Profile</span>
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="bottom" align="end" className="w-64 mt-4 border-border shadow-lg p-2 rounded-xl">
+          {isAuthenticated ? (
+            <>
+              <DropdownMenuLabel className="font-bold text-sm">Hello, {user?.userName}</DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuItem onClick={() => navigate("/shop/account")} className="cursor-pointer font-medium p-3 rounded-lg">
+                <UserCog className="mr-3 h-4 w-4" />
+                Account
+              </DropdownMenuItem>
+              {user?.role === "admin" && (
+                <DropdownMenuItem onClick={() => navigate("/admin/dashboard")} className="cursor-pointer text-indigo-500 font-bold p-3 rounded-lg">
+                  <ShieldCheck className="mr-3 h-4 w-4" />
+                  Admin Panel
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer font-medium p-3 rounded-lg">
+                <LogOut className="mr-3 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <div className="p-4">
+              <DropdownMenuLabel className="font-bold text-sm p-0 mb-1">Welcome</DropdownMenuLabel>
+              <p className="text-xs text-muted-foreground mb-4">To access account and manage orders</p>
+              <Button onClick={() => navigate("/auth/login")} className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-md h-10 font-bold text-xs tracking-wide">
+                LOGIN / SIGNUP
+              </Button>
+            </div>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Wishlist */}
+      <div 
+        onClick={() => navigate("/shop/wishlist")} 
+        className="flex flex-col items-center justify-center cursor-pointer group relative pt-1"
       >
-        <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-purple-600" />
-        <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-purple-400" />
-        <span className="sr-only">Toggle theme</span>
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => navigate("/shop/search")}
-        className="mr-1 hover:bg-muted dark:hover:bg-muted text-foreground/80 hover:text-foreground transition-colors rounded-full"
-      >
-        <Search className="h-5 w-5" />
-        <span className="sr-only">Search</span>
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => navigate("/shop/wishlist")}
-        className="mr-1 relative hover:bg-pink-500/10 hover:border-pink-500/30 transition-all duration-300 rounded-xl group"
-      >
-        <Heart className="w-5 h-5 text-foreground/80 group-hover:text-pink-500" />
-        <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-[10px] font-bold text-white shadow-md shadow-pink-500/25">
-          {wishlistItems?.length || 0}
-        </span>
-        <span className="sr-only">Wishlist</span>
-      </Button>
-      <Sheet open={openCartSheet} onOpenChange={() => setOpenCartSheet(false)}>
-        <Button
-          onClick={() => setOpenCartSheet(true)}
-          variant="outline"
-          size="icon"
-          className="relative hover:bg-purple-500/10 hover:border-purple-500/30 transition-all duration-300 rounded-xl"
-        >
-          <ShoppingCart className="w-5 h-5 text-foreground/80 group-hover:text-purple-500" />
-          <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-[10px] font-bold text-white shadow-md shadow-purple-500/25">
-            {cartItems?.items?.length || 0}
+        <div className="relative">
+          <Heart className="h-5 w-5 text-foreground/90 group-hover:text-pink-500 transition-colors" />
+          <span className="absolute -top-1.5 -right-2 flex h-[16px] w-[16px] items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white shadow-sm">
+            {wishlistItems?.length || 0}
           </span>
-          <span className="sr-only">User cart</span>
-        </Button>
+        </div>
+        <span className="text-[11px] font-semibold mt-1 text-foreground/90 group-hover:text-pink-500 transition-colors hidden lg:block">Wishlist</span>
+      </div>
+
+      {/* Cart */}
+      <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
+        <div 
+          onClick={() => setOpenCartSheet(true)} 
+          className="flex flex-col items-center justify-center cursor-pointer group relative pt-1 outline-none"
+        >
+          <div className="relative">
+            <ShoppingCart className="h-5 w-5 text-foreground/90 group-hover:text-purple-600 transition-colors" />
+            <span className="absolute -top-1.5 -right-2 flex h-[16px] w-[16px] items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white shadow-sm">
+              {cartItems?.items?.length || 0}
+            </span>
+          </div>
+          <span className="text-[11px] font-semibold mt-1 text-foreground/90 group-hover:text-purple-600 transition-colors hidden lg:block">Cart</span>
+        </div>
         <UserCartWrapper
           setOpenCartSheet={setOpenCartSheet}
           cartItems={
@@ -153,91 +217,60 @@ function HeaderRightContent() {
           }
         />
       </Sheet>
-
-      {isAuthenticated ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Avatar className="bg-purple-600 hover:bg-purple-700 cursor-pointer shadow-lg shadow-purple-500/30 transition-transform hover:scale-105">
-              {user?.avatar && (
-                <AvatarImage src={`https://api.dicebear.com/9.x/micah/svg?seed=${user.avatar}&backgroundColor=transparent`} alt="User Avatar" />
-              )}
-              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-lg">
-                {user?.userName[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" className="w-56 mt-2 card-gradient border-purple-500/20">
-            <DropdownMenuLabel className="font-bold">Logged in as {user?.userName}</DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-purple-500/10" />
-            <DropdownMenuItem onClick={() => navigate("/shop/account")} className="hover:bg-purple-500/10 cursor-pointer">
-              <UserCog className="mr-2 h-4 w-4 text-purple-500" />
-              Account
-            </DropdownMenuItem>
-            
-            {user?.role === "admin" && (
-              <>
-                <DropdownMenuSeparator className="bg-purple-500/10" />
-                <DropdownMenuItem onClick={() => navigate("/admin/dashboard")} className="hover:bg-purple-500/10 cursor-pointer text-indigo-500 font-bold">
-                  <ShieldCheck className="mr-2 h-4 w-4 text-indigo-500" />
-                  Admin Panel
-                </DropdownMenuItem>
-              </>
-            )}
-
-            <DropdownMenuSeparator className="bg-purple-500/10" />
-            <DropdownMenuItem onClick={handleLogout} className="text-red-500 hover:bg-red-500/10 cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <div className="flex items-center gap-3">
-          <Button onClick={() => navigate("/auth/login")} variant="outline" className="border-purple-500/20 hover:border-purple-500/50 hover:bg-purple-500/5 text-sm font-semibold rounded-xl px-5 h-10 transition-all">
-            Login
-          </Button>
-          <Button onClick={() => navigate("/auth/register")} className="!bg-gradient-to-r !from-indigo-600 !via-purple-600 !to-pink-600 dark:!from-purple-500 dark:!via-fuchsia-500 dark:!to-pink-500 !text-white hover:!from-indigo-700 hover:!via-purple-700 hover:!to-pink-700 dark:hover:!from-purple-600 dark:hover:!via-fuchsia-600 dark:hover:!to-pink-600 text-sm font-semibold rounded-xl px-5 h-10 shadow-lg shadow-purple-500/25 hover:scale-102 transition-all">
-            Register
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
 
 function ShoppingHeader() {
-  const { isAuthenticated } = useSelector((state) => state.auth);
-
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background shadow-sm">
-      <div className="flex h-20 items-center justify-between px-4 md:px-8 max-w-7xl mx-auto">
-        <Link to="/shop/home" className="flex items-center gap-3 group">
-          <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform">
-            <HousePlug className="h-6 w-6" />
-          </div>
-          <span className="font-extrabold text-2xl tracking-tight text-gradient">Fashionify</span>
-        </Link>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="lg:hidden border-purple-500/20 hover:bg-purple-500/5 rounded-xl">
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle header menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-full max-w-xs card-gradient border-r-purple-500/20">
-            <div className="flex flex-col gap-6 mt-8">
-              <MenuItems />
-              <div className="h-[1px] bg-purple-500/10 w-full" />
-              <HeaderRightContent />
+      <div className="flex flex-col w-full">
+        {/* Main Header Row */}
+        <div className="flex h-[70px] md:h-[80px] items-center justify-between px-4 md:px-8 w-full max-w-7xl mx-auto lg:max-w-none lg:px-12">
+          {/* Left Logo */}
+          <Link to="/shop/home" className="flex items-center gap-3 lg:mr-10 shrink-0 group">
+            <div className="p-1 rounded-md bg-gradient-to-tr from-orange-500 via-pink-500 to-purple-500 text-white shadow-lg group-hover:scale-110 transition-transform">
+              <HousePlug className="h-7 w-7" />
             </div>
-          </SheetContent>
-        </Sheet>
-        <div className="hidden lg:block">
-          <MenuItems />
+            <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent hidden sm:block">Fashionify</span>
+          </Link>
+
+          {/* Navigation Links (Hidden on mobile) */}
+          <div className="hidden lg:flex h-full items-center justify-start flex-none">
+            <MenuItems />
+          </div>
+
+          {/* Desktop Search Bar */}
+          <div className="flex-1 flex justify-center px-4 md:px-8">
+            <div className="w-full max-w-xl hidden lg:block">
+              <SearchBar isMobile={false} />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 lg:gap-6">
+            {/* Right Icons */}
+            <HeaderRightContent />
+            
+            {/* Mobile Menu Toggle */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Toggle header menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                 <div className="flex flex-col gap-6 mt-8 h-full">
+                   <MenuItems />
+                 </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
-        <div className="hidden lg:block">
-          <HeaderRightContent />
+        {/* Mobile Search Bar - Vertical stacked row */}
+        <div className="lg:hidden w-full px-4 pb-3">
+           <SearchBar isMobile={true} />
         </div>
       </div>
     </header>

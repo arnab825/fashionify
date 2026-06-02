@@ -4,6 +4,7 @@ import axios from "axios";
 const initialState = {
   isLoading: false,
   productList: [],
+  lowStockProducts: [],
 };
 
 export const addNewProduct = createAsyncThunk(
@@ -14,12 +15,9 @@ export const addNewProduct = createAsyncThunk(
       formData,
       {
         withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       }
     );
-
     return result?.data;
   }
 );
@@ -31,7 +29,17 @@ export const fetchAllProducts = createAsyncThunk(
       "http://localhost:8080/api/admin/products/get",
       { withCredentials: true }
     );
+    return result?.data;
+  }
+);
 
+export const fetchLowStockProducts = createAsyncThunk(
+  "/products/fetchLowStockProducts",
+  async () => {
+    const result = await axios.get(
+      "http://localhost:8080/api/admin/products/low-stock",
+      { withCredentials: true }
+    );
     return result?.data;
   }
 );
@@ -44,12 +52,9 @@ export const editProduct = createAsyncThunk(
       formData,
       {
         withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       }
     );
-
     return result?.data;
   }
 );
@@ -61,7 +66,6 @@ export const deleteProduct = createAsyncThunk(
       `http://localhost:8080/api/admin/products/delete/${id}`,
       { withCredentials: true }
     );
-
     return result?.data;
   }
 );
@@ -72,16 +76,20 @@ const AdminProductsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAllProducts.pending, (state) => {
-        state.isLoading = true;
-      })
+      .addCase(fetchAllProducts.pending, (state) => { state.isLoading = true; })
       .addCase(fetchAllProducts.fulfilled, (state, action) => {
         state.isLoading = false;
         state.productList = action.payload.data;
       })
-      .addCase(fetchAllProducts.rejected, (state, action) => {
+      .addCase(fetchAllProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
+      })
+      .addCase(fetchLowStockProducts.fulfilled, (state, action) => {
+        state.lowStockProducts = action.payload.data;
+      })
+      .addCase(fetchLowStockProducts.rejected, (state) => {
+        state.lowStockProducts = [];
       });
   },
 });

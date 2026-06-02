@@ -59,12 +59,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> 
+                .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/api/shop/products/get").permitAll()
+                            .requestMatchers("/api/shop/products/get/**").permitAll()
                             .requestMatchers("/api/shop/search/**").permitAll()
                             .requestMatchers("/api/common/feature/get").permitAll()
                             .requestMatchers("/api/shop/review/**").permitAll()
+                            .requestMatchers("/api/admin/products/upload-image").permitAll()
                             .anyRequest().authenticated()
                 );
         

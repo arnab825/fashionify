@@ -20,7 +20,9 @@ function CheckAuth({ isAuthenticated, user, children }) {
       location.pathname.includes("/register") ||
       location.pathname.includes("/shop/home") ||
       location.pathname.includes("/shop/listing") ||
-      location.pathname.includes("/shop/search")
+      location.pathname.includes("/shop/search") ||
+      location.pathname.includes("/shop/about") ||
+      location.pathname.includes("/shop/contact")
     )
   ) {
     return <Navigate to="/auth/login" />;

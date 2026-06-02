@@ -2,9 +2,11 @@ package com.fashionify.backend.controller.shop;
 
 import com.fashionify.backend.entity.Cart;
 import com.fashionify.backend.entity.Order;
+import com.fashionify.backend.entity.OrderItem;
 import com.fashionify.backend.entity.User;
 import com.fashionify.backend.repository.CartRepository;
 import com.fashionify.backend.repository.OrderRepository;
+import com.fashionify.backend.repository.ProductSizeVariantRepository;
 import com.fashionify.backend.repository.UserRepository;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
@@ -19,8 +21,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-
 @CrossOrigin(origins = "http://localhost:5173", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/shop/order")
@@ -34,6 +34,9 @@ public class ShopOrderController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProductSizeVariantRepository sizeVariantRepository;
 
     @Value("${razorpay.key-id}")
     private String razorpayKeyId;
@@ -123,10 +126,25 @@ public class ShopOrderController {
                 order.setOrderStatus("confirmed");
                 order.setPaymentId(razorpayPaymentId);
                 order.setPayerId(razorpayOrderId);
-                
+
                 orderRepository.save(order);
 
-                // Delete Cart
+                // Decrement stock for each ordered size variant
+                for (OrderItem item : order.getOrderItems()) {
+                    if (item.getProductId() != null && item.getSelectedSize() != null) {
+                        Long pid = Long.parseLong(item.getProductId());
+                        sizeVariantRepository.findByProductId(pid).stream()
+                                .filter(v -> v.getSize().equals(item.getSelectedSize()))
+                                .findFirst()
+                                .ifPresent(variant -> {
+                                    int newStock = Math.max(0, variant.getStock() - item.getQuantity());
+                                    variant.setStock(newStock);
+                                    sizeVariantRepository.save(variant);
+                                });
+                    }
+                }
+
+                // Clear Cart
                 Optional<Cart> cartOpt = cartRepository.findByUserId(order.getUser().getId());
                 cartOpt.ifPresent(cart -> {
                     cart.getItems().clear();

@@ -14,27 +14,25 @@ function UserCartItemsContent({ cartItem }) {
   function handleUpdateQuantity(getCartItem, typeOfAction) {
     if (typeOfAction == "plus") {
       let getCartItems = cartItems.items || [];
-
       if (getCartItems.length) {
         const indexOfCurrentCartItem = getCartItems.findIndex(
-          (item) => item.product?.id === getCartItem?.product?.id
+          (item) =>
+            item.product?.id === getCartItem?.product?.id &&
+            item.selectedSize === getCartItem?.selectedSize
         );
-
-        const getCurrentProductIndex = productList.findIndex(
-          (product) => product.id === getCartItem?.product?.id
+        const getCurrentProduct = productList.find((p) => p.id === getCartItem?.product?.id);
+        const sizeVariant = getCurrentProduct?.sizeVariants?.find(
+          (v) => v.size === getCartItem?.selectedSize
         );
-        const getTotalStock = productList[getCurrentProductIndex].totalStock;
-
-        console.log(getCurrentProductIndex, getTotalStock, "getTotalStock");
+        const getTotalStock = sizeVariant?.stock ?? getCurrentProduct?.totalStock ?? 0;
 
         if (indexOfCurrentCartItem > -1) {
           const getQuantity = getCartItems[indexOfCurrentCartItem].quantity;
           if (getQuantity + 1 > getTotalStock) {
             toast({
-              title: `Only ${getQuantity} quantity can be added for this item`,
+              title: `Only ${getTotalStock} in stock for size ${getCartItem?.selectedSize || "this item"}`,
               variant: "destructive",
             });
-
             return;
           }
         }
@@ -45,28 +43,26 @@ function UserCartItemsContent({ cartItem }) {
       updateCartQuantity({
         userId: user?.id,
         productId: getCartItem?.product?.id,
-        quantity:
-          typeOfAction === "plus"
-            ? getCartItem?.quantity + 1
-            : getCartItem?.quantity - 1,
+        quantity: typeOfAction === "plus" ? getCartItem?.quantity + 1 : getCartItem?.quantity - 1,
+        selectedSize: getCartItem?.selectedSize || null,
       })
     ).then((data) => {
       if (data?.payload?.success) {
-        toast({
-          title: "Cart item is updated successfully",
-        });
+        toast({ title: "Cart item is updated successfully" });
       }
     });
   }
 
   function handleCartItemDelete(getCartItem) {
     dispatch(
-      deleteCartItem({ userId: user?.id, productId: getCartItem?.product?.id })
+      deleteCartItem({
+        userId: user?.id,
+        productId: getCartItem?.product?.id,
+        selectedSize: getCartItem?.selectedSize || null,
+      })
     ).then((data) => {
       if (data?.payload?.success) {
-        toast({
-          title: "Cart item is deleted successfully",
-        });
+        toast({ title: "Cart item is deleted successfully" });
       }
     });
   }
@@ -74,12 +70,17 @@ function UserCartItemsContent({ cartItem }) {
   return (
     <div className="flex items-center space-x-4">
       <img
-        src={cartItem?.product?.image}
+        src={cartItem?.product?.images?.[0] || cartItem?.product?.image}
         alt={cartItem?.product?.title}
         className="w-20 h-20 rounded object-cover"
       />
       <div className="flex-1 min-w-0">
         <h3 className="font-extrabold truncate">{cartItem?.product?.title}</h3>
+        {cartItem?.selectedSize && (
+          <span className="inline-block text-xs font-semibold text-purple-700 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded-full mt-1">
+            Size: {cartItem.selectedSize}
+          </span>
+        )}
         <div className="flex items-center gap-2 mt-1">
           <Button
             variant="outline"

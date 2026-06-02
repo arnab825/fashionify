@@ -8,17 +8,12 @@ const initialState = {
 
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
-  async ({ userId, productId, quantity }) => {
+  async ({ userId, productId, quantity, selectedSize }) => {
     const response = await axios.post(
       "http://localhost:8080/api/shop/cart/add",
-      {
-        userId,
-        productId,
-        quantity,
-      },
+      { userId, productId, quantity, selectedSize },
       { withCredentials: true }
     );
-
     return response.data;
   }
 );
@@ -37,29 +32,24 @@ export const fetchCartItems = createAsyncThunk(
 
 export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
-  async ({ userId, productId }) => {
+  async ({ userId, productId, selectedSize }) => {
+    const params = selectedSize ? `?selectedSize=${encodeURIComponent(selectedSize)}` : "";
     const response = await axios.delete(
-      `http://localhost:8080/api/shop/cart/${userId}/${productId}`,
+      `http://localhost:8080/api/shop/cart/${userId}/${productId}${params}`,
       { withCredentials: true }
     );
-
     return response.data;
   }
 );
 
 export const updateCartQuantity = createAsyncThunk(
   "cart/updateCartQuantity",
-  async ({ userId, productId, quantity }) => {
+  async ({ userId, productId, quantity, selectedSize }) => {
     const response = await axios.put(
       "http://localhost:8080/api/shop/cart/update-cart",
-      {
-        userId,
-        productId,
-        quantity,
-      },
+      { userId, productId, quantity, selectedSize },
       { withCredentials: true }
     );
-
     return response.data;
   }
 );

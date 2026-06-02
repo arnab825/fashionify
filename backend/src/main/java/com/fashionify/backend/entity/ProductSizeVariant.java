@@ -4,30 +4,30 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "cart_items")
+@Table(name = "product_size_variants")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CartItem {
+public class ProductSizeVariant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     @ToString.Exclude
     @com.fasterxml.jackson.annotation.JsonIgnore
-    private Cart cart;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Column(nullable = false)
-    private Integer quantity;
+    private String size;
 
-    // The size selected by the user (e.g. "M", "UK 8", "One Size")
-    private String selectedSize;
+    @Column(nullable = false)
+    private Integer stock;
+
+    // Optional: measurement details like "Chest: 40\", Waist: 32\""
+    @Column(columnDefinition = "TEXT")
+    private String measurements;
 }
