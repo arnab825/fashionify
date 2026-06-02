@@ -17,11 +17,11 @@ function UserCartItemsContent({ cartItem }) {
 
       if (getCartItems.length) {
         const indexOfCurrentCartItem = getCartItems.findIndex(
-          (item) => item.productId === getCartItem?.productId
+          (item) => item.product?.id === getCartItem?.product?.id
         );
 
         const getCurrentProductIndex = productList.findIndex(
-          (product) => product.id === getCartItem?.productId
+          (product) => product.id === getCartItem?.product?.id
         );
         const getTotalStock = productList[getCurrentProductIndex].totalStock;
 
@@ -44,7 +44,7 @@ function UserCartItemsContent({ cartItem }) {
     dispatch(
       updateCartQuantity({
         userId: user?.id,
-        productId: getCartItem?.productId,
+        productId: getCartItem?.product?.id,
         quantity:
           typeOfAction === "plus"
             ? getCartItem?.quantity + 1
@@ -61,7 +61,7 @@ function UserCartItemsContent({ cartItem }) {
 
   function handleCartItemDelete(getCartItem) {
     dispatch(
-      deleteCartItem({ userId: user?.id, productId: getCartItem?.productId })
+      deleteCartItem({ userId: user?.id, productId: getCartItem?.product?.id })
     ).then((data) => {
       if (data?.payload?.success) {
         toast({
@@ -74,12 +74,12 @@ function UserCartItemsContent({ cartItem }) {
   return (
     <div className="flex items-center space-x-4">
       <img
-        src={cartItem?.image}
-        alt={cartItem?.title}
+        src={cartItem?.product?.image}
+        alt={cartItem?.product?.title}
         className="w-20 h-20 rounded object-cover"
       />
-      <div className="flex-1">
-        <h3 className="font-extrabold">{cartItem?.title}</h3>
+      <div className="flex-1 min-w-0">
+        <h3 className="font-extrabold truncate">{cartItem?.product?.title}</h3>
         <div className="flex items-center gap-2 mt-1">
           <Button
             variant="outline"
@@ -105,9 +105,9 @@ function UserCartItemsContent({ cartItem }) {
       </div>
       <div className="flex flex-col items-end">
         <p className="font-semibold">
-          $
+          ₹
           {(
-            (cartItem?.salePrice > 0 ? cartItem?.salePrice : cartItem?.price) *
+            (cartItem?.product?.salePrice > 0 ? cartItem?.product?.salePrice : cartItem?.product?.price) *
             cartItem?.quantity
           ).toFixed(2)}
         </p>

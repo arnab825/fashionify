@@ -39,7 +39,7 @@ function AdminOrdersView() {
   }, [orderDetails]);
 
   return (
-    <Card>
+    <Card className="bg-card border-border shadow-sm">
       <CardHeader>
         <CardTitle>All Orders</CardTitle>
       </CardHeader>
@@ -61,7 +61,11 @@ function AdminOrdersView() {
               ? orderList.map((orderItem) => (
                   <TableRow>
                     <TableCell>{orderItem?.id}</TableCell>
-                    <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
+                    <TableCell>
+                      {Array.isArray(orderItem?.orderDate)
+                        ? `${orderItem.orderDate[0]}-${String(orderItem.orderDate[1]).padStart(2, '0')}-${String(orderItem.orderDate[2]).padStart(2, '0')}`
+                        : orderItem?.orderDate?.split("T")[0] || 'N/A'}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         className={`py-1 px-3 ${

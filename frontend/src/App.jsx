@@ -8,11 +8,13 @@ import AdminDashboard from "./pages/admin-view/dashboard";
 import AdminProducts from "./pages/admin-view/products";
 import AdminOrders from "./pages/admin-view/orders";
 import AdminFeatures from "./pages/admin-view/features";
+import AdminUsers from "./pages/admin-view/users";
 import ShoppingLayout from "./components/shopping-view/layout";
 import NotFound from "./pages/not-found";
 import ShoppingHome from "./pages/shopping-view/home";
 import ShoppingListing from "./pages/shopping-view/listing";
 import ShoppingCheckout from "./pages/shopping-view/checkout";
+import ShoppingProductDetails from "./pages/shopping-view/product-details";
 import ShoppingAccount from "./pages/shopping-view/account";
 import CheckAuth from "./components/common/check-auth";
 import UnauthPage from "./pages/unauth-page";
@@ -23,6 +25,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
+import ShoppingAbout from "./pages/shopping-view/about";
+import ShoppingContact from "./pages/shopping-view/contact";
+import ShoppingWishlist from "./pages/shopping-view/wishlist";
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -34,12 +39,25 @@ function App() {
     dispatch(checkAuth());
   }, [dispatch]);
 
-  if (isLoading) return <Skeleton className="w-[800] bg-black h-[600px]" />;
+  if (isLoading) return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="h-16 w-full border-b bg-muted/20 animate-pulse" />
+      <main className="flex-1 p-6 md:p-10 flex flex-col gap-6 max-w-7xl mx-auto w-full mt-4">
+        <Skeleton className="h-12 w-[300px] rounded-xl" />
+        <Skeleton className="h-[400px] w-full rounded-3xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+          <Skeleton className="h-[200px] w-full rounded-2xl" />
+          <Skeleton className="h-[200px] w-full rounded-2xl" />
+          <Skeleton className="h-[200px] w-full rounded-2xl" />
+        </div>
+      </main>
+    </div>
+  );
 
   console.log(isLoading, user);
 
   return (
-    <div className="flex flex-col overflow-hidden bg-background">
+    <div className="flex flex-col min-h-screen bg-background">
       <Routes>
         <Route
           path="/"
@@ -83,6 +101,7 @@ function App() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="features" element={<AdminFeatures />} />
+          <Route path="users" element={<AdminUsers />} />
         </Route>
         <Route
           path="/shop"
@@ -94,8 +113,12 @@ function App() {
         >
           <Route path="home" element={<ShoppingHome />} />
           <Route path="listing" element={<ShoppingListing />} />
+          <Route path="product/:id" element={<ShoppingProductDetails />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
+          <Route path="about" element={<ShoppingAbout />} />
+          <Route path="contact" element={<ShoppingContact />} />
+          <Route path="wishlist" element={<ShoppingWishlist />} />
           <Route path="paypal-return" element={<PaypalReturnPage />} />
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />

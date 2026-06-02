@@ -3,6 +3,7 @@ import {
   ChartNoAxesCombined,
   LayoutDashboard,
   ShoppingBasket,
+  Users,
 } from "lucide-react";
 import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
@@ -27,13 +28,19 @@ const adminSidebarMenuItems = [
     path: "/admin/orders",
     icon: <BadgeCheck />,
   },
+  {
+    id: "users",
+    label: "Users",
+    path: "/admin/users",
+    icon: <Users />,
+  },
 ];
 
 function MenuItems({ setOpen }) {
   const navigate = useNavigate();
 
   return (
-    <nav className="mt-8 flex-col flex gap-2">
+    <nav className="mt-8 flex-col flex gap-3 px-4">
       {adminSidebarMenuItems.map((menuItem) => (
         <div
           key={menuItem.id}
@@ -41,9 +48,11 @@ function MenuItems({ setOpen }) {
             navigate(menuItem.path);
             setOpen ? setOpen(false) : null;
           }}
-          className="flex cursor-pointer text-xl items-center gap-2 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="flex cursor-pointer text-sm font-medium items-center gap-3 rounded-md px-4 py-3 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
-          {menuItem.icon}
+          <div>
+             {menuItem.icon}
+          </div>
           <span>{menuItem.label}</span>
         </div>
       ))}
@@ -69,13 +78,15 @@ function AdminSideBar({ open, setOpen }) {
           </div>
         </SheetContent>
       </Sheet>
-      <aside className="hidden w-64 flex-col border-r bg-background p-6 lg:flex">
+      <aside className="hidden w-[280px] flex-col border-r border-border bg-card py-8 lg:flex">
         <div
           onClick={() => navigate("/admin/dashboard")}
-          className="flex cursor-pointer items-center gap-2"
+          className="flex cursor-pointer items-center gap-3 px-8 mb-6"
         >
-          <ChartNoAxesCombined size={30} />
-          <h1 className="text-2xl font-extrabold">Admin Panel</h1>
+          <div className="p-2 rounded-md bg-primary text-primary-foreground">
+             <ChartNoAxesCombined size={24} />
+          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Fashionify</h1>
         </div>
         <MenuItems />
       </aside>

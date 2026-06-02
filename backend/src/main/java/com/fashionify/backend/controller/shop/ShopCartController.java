@@ -17,6 +17,7 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:5173", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/shop/cart")
+@org.springframework.transaction.annotation.Transactional
 public class ShopCartController {
 
     @Autowired

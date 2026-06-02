@@ -4,14 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import UserCartItemsContent from "@/components/shopping-view/cart-items-content";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { createNewOrder } from "@/store/shop/order-slice";
-import { Navigate } from "react-router-dom";
+import { createNewOrder, capturePayment } from "@/store/shop/order-slice";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
 function ShoppingCheckout() {
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
-  const { approvalURL } = useSelector((state) => state.shopOrder);
+  const navigate = useNavigate();
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymemntStart] = useState(false);
   const dispatch = useDispatch();
@@ -24,21 +24,20 @@ function ShoppingCheckout() {
       ? cartItems.items.reduce(
           (sum, currentItem) =>
             sum +
-            (currentItem?.salePrice > 0
-              ? currentItem?.salePrice
-              : currentItem?.price) *
+            (currentItem?.product?.salePrice > 0
+              ? currentItem?.product?.salePrice
+              : currentItem?.product?.price) *
               currentItem?.quantity,
           0
         )
       : 0;
 
-  function handleInitiatePaypalPayment() {
+  function handleInitiateRazorpayPayment() {
     if (cartItems.length === 0) {
       toast({
         title: "Your cart is empty. Please add items to proceed",
         variant: "destructive",
       });
-
       return;
     }
     if (currentSelectedAddress === null) {
@@ -46,7 +45,6 @@ function ShoppingCheckout() {
         title: "Please select one address to proceed.",
         variant: "destructive",
       });
-
       return;
     }
 
@@ -54,13 +52,13 @@ function ShoppingCheckout() {
       userId: user?.id,
       cartId: cartItems?.id,
       cartItems: cartItems.items.map((singleCartItem) => ({
-        productId: singleCartItem?.productId,
-        title: singleCartItem?.title,
-        image: singleCartItem?.image,
+        productId: singleCartItem?.product?.id,
+        title: singleCartItem?.product?.title,
+        image: singleCartItem?.product?.image,
         price:
-          singleCartItem?.salePrice > 0
-            ? singleCartItem?.salePrice
-            : singleCartItem?.price,
+          singleCartItem?.product?.salePrice > 0
+            ? singleCartItem?.product?.salePrice
+            : singleCartItem?.product?.price,
         quantity: singleCartItem?.quantity,
       })),
       addressInfo: {
@@ -72,7 +70,7 @@ function ShoppingCheckout() {
         notes: currentSelectedAddress?.notes,
       },
       orderStatus: "pending",
-      paymentMethod: "paypal",
+      paymentMethod: "razorpay",
       paymentStatus: "pending",
       totalAmount: totalCartAmount,
       orderDate: new Date(),
@@ -82,17 +80,42 @@ function ShoppingCheckout() {
     };
 
     dispatch(createNewOrder(orderData)).then((data) => {
-      console.log(data, "sangam");
       if (data?.payload?.success) {
-        setIsPaymemntStart(true);
-      } else {
-        setIsPaymemntStart(false);
-      }
-    });
-  }
+        const { razorpayOrderId, amount, currency, orderId } = data.payload;
 
-  if (approvalURL) {
-    window.location.href = approvalURL;
+        const options = {
+          key: "rzp_test_yourkeyid", // Note: Must match backend
+          amount: amount,
+          currency: currency,
+          name: "Fashionify",
+          description: "Order Checkout",
+          order_id: razorpayOrderId,
+          handler: function (response) {
+            dispatch(
+              capturePayment({
+                paymentId: response.razorpay_payment_id,
+                payerId: response.razorpay_order_id,
+                orderId: orderId,
+              })
+            ).then((captureData) => {
+              if (captureData?.payload?.success) {
+                navigate("/shop/payment-success");
+              }
+            });
+          },
+          prefill: {
+            name: user?.userName || "User",
+            email: user?.email || "user@example.com",
+          },
+          theme: {
+            color: "#9333ea", // Tailwind purple-600
+          },
+        };
+        const rzp1 = new window.Razorpay(options);
+        rzp1.open();
+      }
+      setIsPaymemntStart(false);
+    });
   }
 
   return (
@@ -114,14 +137,14 @@ function ShoppingCheckout() {
           <div className="mt-8 space-y-4">
             <div className="flex justify-between">
               <span className="font-bold">Total</span>
-              <span className="font-bold">${totalCartAmount}</span>
+              <span className="font-bold">₹{totalCartAmount}</span>
             </div>
           </div>
           <div className="mt-4 w-full">
-            <Button onClick={handleInitiatePaypalPayment} className="w-full">
+            <Button onClick={handleInitiateRazorpayPayment} className="w-full">
               {isPaymentStart
-                ? "Processing Paypal Payment..."
-                : "Checkout with Paypal"}
+                ? "Processing Razorpay Payment..."
+                : "Checkout with Razorpay"}
             </Button>
           </div>
         </div>

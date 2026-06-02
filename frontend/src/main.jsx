@@ -10,11 +10,15 @@ import axios from "axios";
 
 axios.defaults.withCredentials = true;
 
+import { ThemeProvider } from "./components/theme-provider.jsx";
+
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Provider store={store}>
-      <App />
-      <Toaster />
+      <ThemeProvider defaultTheme="dark" storageKey="fashionify-theme">
+        <App />
+        <Toaster />
+      </ThemeProvider>
     </Provider>
   </BrowserRouter>
 );
