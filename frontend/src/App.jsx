@@ -1,4 +1,5 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import AuthLayout from "./components/auth/layout";
 import AuthLogin from "./pages/auth/login";
 import AuthRegister from "./pages/auth/register";
@@ -54,11 +55,15 @@ function App() {
     </div>
   );
 
-  console.log(isLoading, user);
+
+
+
+  const location = useLocation();
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <Routes>
+      <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         <Route
           path="/"
           element={
@@ -126,6 +131,7 @@ function App() {
         <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </AnimatePresence>
     </div>
   );
 }

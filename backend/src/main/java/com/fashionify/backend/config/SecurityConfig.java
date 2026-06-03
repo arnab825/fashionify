@@ -61,11 +61,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()
+                            .requestMatchers("/api/admin-auth/**").permitAll()
                             .requestMatchers("/api/shop/products/get").permitAll()
                             .requestMatchers("/api/shop/products/get/**").permitAll()
                             .requestMatchers("/api/shop/search/**").permitAll()
                             .requestMatchers("/api/common/feature/get").permitAll()
                             .requestMatchers("/api/shop/review/**").permitAll()
+                            .requestMatchers("/api/shop/recommendations").permitAll()
                             .requestMatchers("/api/admin/products/upload-image").permitAll()
                             .anyRequest().authenticated()
                 );

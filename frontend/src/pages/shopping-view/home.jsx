@@ -30,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
 import { getFeatureImages } from "@/store/common-slice";
+import RecommendationsCarousel from "@/components/shopping-view/recommendations-carousel";
 
 const categoriesWithIcon = [
   { id: "men", label: "Men", icon: ShirtIcon },
@@ -145,8 +146,6 @@ function ShoppingHome() {
       })
     );
   }, [dispatch]);
-
-  console.log(productList, "productList");
 
   useEffect(() => {
     dispatch(getFeatureImages());
@@ -350,6 +349,11 @@ function ShoppingHome() {
           </div>
         </div>
       </section>
+
+      {/* Recommendations carousel — only for authenticated users */}
+      {isAuthenticated && user?.id && (
+        <RecommendationsCarousel userId={user.id} />
+      )}
 
       {/* Customer Reviews Section */}
       <section className="py-20 bg-muted/40 relative overflow-hidden">

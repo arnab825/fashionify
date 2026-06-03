@@ -4,11 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "@/store/auth-slice";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useTheme } from "@/components/theme-provider";
 
-function AdminHeader({ setOpen, isDarkMode, setIsDarkMode }) {
+function AdminHeader({ setOpen }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
 
   function handleLogout() {
     dispatch(logoutUser());
@@ -21,12 +24,14 @@ function AdminHeader({ setOpen, isDarkMode, setIsDarkMode }) {
         <span className="sr-only">Toggle Menu</span>
       </Button>
       <div className="flex flex-1 justify-end gap-4 items-center">
+        {/* Theme toggle — wired to ThemeProvider, persists to localStorage */}
         <Button
           variant="outline"
           size="icon"
-          onClick={() => setIsDarkMode(!isDarkMode)}
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          aria-label="Toggle theme"
         >
-          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
         <Button
           variant="outline"
@@ -36,16 +41,16 @@ function AdminHeader({ setOpen, isDarkMode, setIsDarkMode }) {
           <Store className="h-4 w-4" />
           View Store
         </Button>
-        <Button
-          onClick={handleLogout}
-          className="gap-2 font-medium"
-        >
+        <Button onClick={handleLogout} className="gap-2 font-medium">
           <LogOut className="h-4 w-4" />
           Logout
         </Button>
         <Avatar className="cursor-pointer border-2 border-border ml-2">
           {user?.avatar && (
-            <AvatarImage src={`https://api.dicebear.com/9.x/micah/svg?seed=${user.avatar}&backgroundColor=transparent`} alt="User Avatar" />
+            <AvatarImage
+              src={`https://api.dicebear.com/9.x/micah/svg?seed=${user.avatar}&backgroundColor=transparent`}
+              alt="User Avatar"
+            />
           )}
           <AvatarFallback className="bg-primary text-primary-foreground font-bold">
             {user?.userName?.[0]?.toUpperCase() || "A"}

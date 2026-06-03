@@ -10,7 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "products")
+@Table(name = "products", indexes = {
+    @Index(name = "idx_product_category", columnList = "category"),
+    @Index(name = "idx_product_brand", columnList = "brand")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,7 +30,6 @@ public class Product {
     @Column(name = "image_url", columnDefinition = "TEXT")
     @Builder.Default
     private List<String> images = new ArrayList<>();
-
 
     @Column(nullable = false)
     private String title;
@@ -48,6 +50,15 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<ProductSizeVariant> sizeVariants = new ArrayList<>();
+
+    // Product tags — max 5, stored in product_tags join table, indexed for recommendation queries
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "product_tags",
+            joinColumns = @JoinColumn(name = "product_id"),
+            indexes = @Index(name = "idx_product_tag_tag", columnList = "tag"))
+    @Column(name = "tag", length = 64)
+    @Builder.Default
+    private List<String> tags = new ArrayList<>();
 
     private Double averageReview;
 

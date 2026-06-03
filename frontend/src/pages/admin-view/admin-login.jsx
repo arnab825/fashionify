@@ -1,33 +1,29 @@
-import CommonForm from "@/components/common/form";
 import { useToast } from "@/components/ui/use-toast";
-import { loginFormControls } from "@/config";
-import { loginUser } from "@/store/auth-slice";
+import { adminLoginUser } from "@/store/auth-slice";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
-const initialState = {
-  email: "",
-  password: "",
-};
+const initialState = { email: "", password: "" };
 
 function AdminLogin() {
   const [formData, setFormData] = useState(initialState);
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const { toast } = useToast();
   const { isLoading } = useSelector((state) => state.auth);
 
   function onSubmit(event) {
     event.preventDefault();
-
-    dispatch(loginUser(formData)).then((data) => {
+    dispatch(adminLoginUser(formData)).then((data) => {
       if (data?.payload?.success) {
-        toast({
-          title: "Admin login successful",
-        });
+        toast({ title: "Admin login successful. Welcome back!" });
       } else {
         toast({
-          title: data?.payload?.message,
+          title: data?.payload?.message || "Login failed. Please check your credentials.",
           variant: "destructive",
         });
       }
@@ -35,30 +31,89 @@ function AdminLogin() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 text-white w-full px-4">
-      <div className="mx-auto w-full max-w-md space-y-6 bg-zinc-900 p-8 rounded-xl shadow-2xl border border-zinc-800">
-        <div className="flex flex-col items-center text-center space-y-2">
-          <div className="bg-primary/20 p-3 rounded-full">
-            <ShieldCheck className="w-10 h-10 text-primary" />
+    <div className="flex flex-col items-center justify-center min-h-screen w-full px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="mx-auto w-full max-w-md space-y-6 card-gradient p-8 rounded-2xl shadow-xl border-t-4 border-t-indigo-500/40"
+      >
+        {/* Header */}
+        <div className="flex flex-col items-center text-center space-y-3">
+          <div className="p-3 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-lg">
+            <ShieldCheck className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mt-4">
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             Admin Portal
           </h1>
-          <p className="text-zinc-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             Sign in with your administrator credentials
           </p>
         </div>
-        <div className="admin-form-theme">
-          <CommonForm
-            formControls={loginFormControls}
-            buttonText={"Access Dashboard"}
-            formData={formData}
-            setFormData={setFormData}
-            onSubmit={onSubmit}
-            isLoading={isLoading}
-          />
-        </div>
-      </div>
+
+        {/* Form */}
+        <form onSubmit={onSubmit} className="space-y-4">
+          {/* Email */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground" htmlFor="admin-email">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="admin-email"
+                type="email"
+                placeholder="admin@fashionify.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="pl-10"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground" htmlFor="admin-password">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="admin-password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter admin password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="pl-10 pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 border-0 text-white rounded-xl py-6 font-bold shadow-lg shadow-indigo-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all"
+          >
+            {isLoading ? "Authenticating…" : "Access Dashboard"}
+          </Button>
+        </form>
+
+        <p className="text-xs text-center text-muted-foreground">
+          Regular customers?{" "}
+          <a href="/auth/login" className="text-purple-600 hover:underline font-medium">
+            Use Customer Login
+          </a>
+        </p>
+      </motion.div>
     </div>
   );
 }

@@ -1,0 +1,76 @@
+package com.fashionify.backend.controller;
+
+import com.fashionify.backend.dto.JwtResponse;
+import com.fashionify.backend.dto.LoginRequest;
+import com.fashionify.backend.dto.MessageResponse;
+import com.fashionify.backend.security.JwtUtils;
+import com.fashionify.backend.security.UserDetailsImpl;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Dedicated admin login endpoint — only allows accounts with role=admin.
+ * Mapped to /api/admin-auth/login so the frontend admin portal uses a
+ * completely separate path from the customer login.
+ */
+@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600, allowCredentials = "true")
+@RestController
+@RequestMapping("/api/admin-auth")
+public class AdminAuthController {
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtUtils jwtUtils;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> adminLogin(@Valid @RequestBody LoginRequest loginRequest,
+                                        HttpServletResponse response) {
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String role = userDetails.getAuthorities().iterator().next().getAuthority()
+                .replace("ROLE_", "").toLowerCase();
+
+        // Admin portal must only allow role=admin
+        if (!"admin".equals(role)) {
+            return ResponseEntity.status(403)
+                    .body(new MessageResponse(false,
+                            "Access denied. This portal is for administrators only. Please use the Customer Login."));
+        }
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        Cookie cookie = new Cookie("token", jwt);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(60 * 60 * 24);
+        response.addCookie(cookie);
+        response.addHeader("Set-Cookie",
+                "token=" + jwt + "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
+
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("email", userDetails.getEmail());
+        userMap.put("role", role);
+        userMap.put("id", userDetails.getId());
+        userMap.put("userName", userDetails.getUsername());
+
+        return ResponseEntity.ok(new JwtResponse(true, "Admin login successful", userMap));
+    }
+}

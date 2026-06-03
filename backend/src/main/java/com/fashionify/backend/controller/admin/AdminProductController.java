@@ -5,6 +5,7 @@ import com.fashionify.backend.entity.ProductSizeVariant;
 import com.fashionify.backend.repository.ProductRepository;
 import com.fashionify.backend.repository.ProductSizeVariantRepository;
 import com.fashionify.backend.service.CloudinaryService;
+import com.fashionify.backend.service.TagMigrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,9 @@ public class AdminProductController {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private TagMigrationService tagMigrationService;
 
     // ── Image Upload ─────────────────────────────────────────────────────────
     @PostMapping("/upload-image")
@@ -73,9 +77,10 @@ public class AdminProductController {
     // ── Edit Product ─────────────────────────────────────────────────────────
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> editProduct(@PathVariable Long id,
-                                          @RequestBody Map<String, Object> payload) {
+            @RequestBody Map<String, Object> payload) {
         Optional<Product> opt = productRepository.findById(id);
-        if (opt.isEmpty()) return ResponseEntity.notFound().build();
+        if (opt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         Product product = opt.get();
         buildProductFromPayload(payload, product);
@@ -100,13 +105,93 @@ public class AdminProductController {
         return ResponseEntity.notFound().build();
     }
 
+    // ── Tag Migration ─────────────────────────────────────────────────────────
+    @PostMapping("/tags/migrate")
+    public ResponseEntity<?> migrateTags(@RequestBody Map<String, Object> payload) {
+        boolean previewOnly = Boolean.TRUE.equals(payload.get("previewOnly"));
+        boolean forceOverwrite = Boolean.TRUE.equals(payload.get("forceOverwrite"));
+        
+        List<Product> productsToProcess;
+        if (forceOverwrite) {
+            productsToProcess = productRepository.findAll();
+        } else {
+            productsToProcess = productRepository.findByTagsIsEmpty();
+        }
+        
+        long totalFound = productRepository.count();
+        long totalProcessed = productsToProcess.size();
+        long updated = 0;
+        long skipped = 0;
+        
+        List<Map<String, Object>> previewResults = new ArrayList<>();
+        
+        for (Product p : productsToProcess) {
+            if (!forceOverwrite && p.getTags() != null && !p.getTags().isEmpty()) {
+                skipped++;
+                continue;
+            }
+            
+            List<String> newTags = tagMigrationService.generateTagsForProduct(p);
+            
+            if (previewOnly) {
+                if (previewResults.size() < 20) { // Limit preview to 20 for payload size
+                    Map<String, Object> previewItem = new HashMap<>();
+                    previewItem.put("id", p.getId());
+                    previewItem.put("title", p.getTitle());
+                    previewItem.put("oldTags", p.getTags() != null ? p.getTags() : List.of());
+                    previewItem.put("newTags", newTags);
+                    previewResults.add(previewItem);
+                }
+                updated++;
+            } else {
+                p.setTags(newTags);
+                productRepository.save(p);
+                updated++;
+            }
+        }
+        
+        long manualTags = totalFound - productRepository.findByTagsIsEmpty().size();
+        if (!previewOnly && !forceOverwrite) {
+            manualTags = totalFound - totalProcessed; // rough approximation for report
+        }
+        
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("totalProducts", totalFound);
+        report.put("productsToProcess", totalProcessed);
+        report.put("updated", updated);
+        report.put("skipped", skipped);
+        report.put("manualTags", forceOverwrite ? 0 : manualTags);
+        report.put("missingTags", previewOnly ? productsToProcess.size() : 0);
+        
+        if (previewOnly) {
+            report.put("previewSamples", previewResults);
+        }
+        
+        return ResponseEntity.ok(Map.of("success", true, "data", report, "message", previewOnly ? "Preview generated" : "Migration completed"));
+    }
+
+    @PostMapping("/tags/regenerate/{id}")
+    public ResponseEntity<?> regenerateTagsForProduct(@PathVariable Long id) {
+        Optional<Product> opt = productRepository.findById(id);
+        if (opt.isEmpty()) return ResponseEntity.notFound().build();
+        
+        Product p = opt.get();
+        List<String> newTags = tagMigrationService.generateTagsForProduct(p);
+        
+        return ResponseEntity.ok(Map.of("success", true, "data", newTags));
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     @SuppressWarnings("unchecked")
     private Product buildProductFromPayload(Map<String, Object> payload, Product product) {
-        if (payload.containsKey("title"))       product.setTitle((String) payload.get("title"));
-        if (payload.containsKey("description")) product.setDescription((String) payload.get("description"));
-        if (payload.containsKey("category"))    product.setCategory((String) payload.get("category"));
-        if (payload.containsKey("brand"))       product.setBrand((String) payload.get("brand"));
+        if (payload.containsKey("title"))
+            product.setTitle((String) payload.get("title"));
+        if (payload.containsKey("description"))
+            product.setDescription((String) payload.get("description"));
+        if (payload.containsKey("category"))
+            product.setCategory((String) payload.get("category"));
+        if (payload.containsKey("brand"))
+            product.setBrand((String) payload.get("brand"));
         if (payload.containsKey("averageReview")) {
             Object ar = payload.get("averageReview");
             product.setAverageReview(ar == null ? 0.0 : Double.parseDouble(ar.toString()));
@@ -124,14 +209,30 @@ public class AdminProductController {
             List<String> imgs = (List<String>) payload.get("images");
             product.setImages(imgs != null ? imgs : new ArrayList<>());
         }
+        // Tags — max 5, no duplicates, only non-blank values
+        if (payload.containsKey("tags")) {
+            List<String> rawTags = (List<String>) payload.get("tags");
+            if (rawTags != null) {
+                List<String> cleanedTags = rawTags.stream()
+                        .filter(t -> t != null && !t.isBlank())
+                        .distinct()
+                        .limit(5)
+                        .collect(java.util.stream.Collectors.toList());
+                product.setTags(cleanedTags);
+            } else {
+                product.setTags(new ArrayList<>());
+            }
+        }
         return product;
     }
 
     @SuppressWarnings("unchecked")
     private void saveVariants(Product product, Map<String, Object> payload) {
-        if (!payload.containsKey("sizeVariants")) return;
+        if (!payload.containsKey("sizeVariants"))
+            return;
         List<Map<String, Object>> variants = (List<Map<String, Object>>) payload.get("sizeVariants");
-        if (variants == null) return;
+        if (variants == null)
+            return;
         for (Map<String, Object> v : variants) {
             ProductSizeVariant variant = ProductSizeVariant.builder()
                     .product(product)
@@ -155,6 +256,7 @@ public class AdminProductController {
         map.put("averageReview", product.getAverageReview());
         map.put("createdAt", product.getCreatedAt());
         map.put("updatedAt", product.getUpdatedAt());
+        map.put("tags", product.getTags() != null ? product.getTags() : List.of());
 
         // Images
         map.put("images", product.getImages());

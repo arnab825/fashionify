@@ -1,4 +1,4 @@
-import { HousePlug, LogOut, Menu, ShoppingCart, UserCog, ShieldCheck, Heart, Search, User, Sun, Moon } from "lucide-react";
+import { HousePlug, LogOut, Menu, ShoppingCart, UserCog, ShieldCheck, Heart, Search, User, Sun, Moon, X } from "lucide-react";
 import {
   Link,
   useLocation,
@@ -20,17 +20,22 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { logoutUser } from "@/store/auth-slice";
 import UserCartWrapper from "./cart-wrapper";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { fetchWishlistItems } from "@/store/shop/wishlist-slice";
 import { Input } from "../ui/input";
+import { useTheme } from "@/components/theme-provider";
+import { resetSearchResults } from "@/store/shop/search-slice";
 
 function SearchBar({ isMobile }) {
   const [keyword, setKeyword] = useState("");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const debounceRef = useRef(null);
+  const dispatch = useDispatch();
 
+  // Sync input when navigating to/from search page
   useEffect(() => {
     if (location.pathname === "/shop/search") {
       setKeyword(searchParams.get("keyword") || "");
@@ -40,26 +45,50 @@ function SearchBar({ isMobile }) {
   }, [location.pathname, searchParams]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const currentUrlKeyword = searchParams.get("keyword") || "";
-      if (keyword !== currentUrlKeyword && keyword.trim() !== "") {
-        navigate(`/shop/search?keyword=${encodeURIComponent(keyword)}`);
-      } else if (keyword === "" && currentUrlKeyword !== "" && location.pathname === "/shop/search") {
-        navigate(`/shop/search`);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!keyword.trim()) {
+      // If user cleared input while on the search page, reset results immediately
+      if (location.pathname === "/shop/search") {
+        dispatch(resetSearchResults());
+        navigate("/shop/search", { replace: true });
       }
-    }, 500); // 500ms debounce
-    return () => clearTimeout(timer);
-  }, [keyword, navigate, location.pathname, searchParams]);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      navigate(`/shop/search?keyword=${encodeURIComponent(keyword)}`);
+    }, 500);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [keyword, navigate, location.pathname, dispatch]);
+
+  function handleClear() {
+    setKeyword("");
+    dispatch(resetSearchResults());
+    if (location.pathname === "/shop/search") {
+      navigate("/shop/search", { replace: true });
+    }
+  }
 
   return (
     <div className={`relative w-full ${isMobile ? "" : "max-w-xl"}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
       <Input
-        className="w-full bg-muted/70 border-transparent focus-visible:ring-1 focus-visible:ring-purple-500 pl-11 h-10 rounded-md shadow-sm"
+        className="w-full bg-muted/70 border-transparent focus-visible:ring-1 focus-visible:ring-purple-500 pl-11 pr-9 h-10 rounded-md shadow-sm"
         placeholder="Search for products, brands and more"
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
       />
+      {keyword && (
+        <button
+          onClick={handleClear}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Clear search"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
@@ -114,6 +143,7 @@ function HeaderRightContent() {
   const [openCartSheet, setOpenCartSheet] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { theme, setTheme } = useTheme();
 
   function handleLogout() {
     dispatch(logoutUser());
@@ -126,8 +156,26 @@ function HeaderRightContent() {
     }
   }, [dispatch, isAuthenticated, user?.id]);
 
+  const isDark = theme === "dark";
+
   return (
-    <div className="flex lg:items-center flex-row gap-6">
+    <div className="flex lg:items-center flex-row gap-4 lg:gap-6">
+      {/* Theme Toggle */}
+      <button
+        onClick={() => setTheme(isDark ? "light" : "dark")}
+        className="flex flex-col items-center justify-center cursor-pointer group pt-1"
+        aria-label="Toggle theme"
+      >
+        {isDark ? (
+          <Sun className="h-5 w-5 text-foreground/90 group-hover:text-yellow-400 transition-colors" />
+        ) : (
+          <Moon className="h-5 w-5 text-foreground/90 group-hover:text-purple-600 transition-colors" />
+        )}
+        <span className="text-[11px] font-semibold mt-1 text-foreground/90 group-hover:text-purple-600 transition-colors hidden lg:block">
+          {isDark ? "Light" : "Dark"}
+        </span>
+      </button>
+
       {/* Profile Icon with Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -181,8 +229,8 @@ function HeaderRightContent() {
       </DropdownMenu>
 
       {/* Wishlist */}
-      <div 
-        onClick={() => navigate("/shop/wishlist")} 
+      <div
+        onClick={() => navigate("/shop/wishlist")}
         className="flex flex-col items-center justify-center cursor-pointer group relative pt-1"
       >
         <div className="relative">
@@ -196,8 +244,8 @@ function HeaderRightContent() {
 
       {/* Cart */}
       <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
-        <div 
-          onClick={() => setOpenCartSheet(true)} 
+        <div
+          onClick={() => setOpenCartSheet(true)}
           className="flex flex-col items-center justify-center cursor-pointer group relative pt-1 outline-none"
         >
           <div className="relative">
@@ -246,11 +294,11 @@ function ShoppingHeader() {
               <SearchBar isMobile={false} />
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4 lg:gap-6">
             {/* Right Icons */}
             <HeaderRightContent />
-            
+
             {/* Mobile Menu Toggle */}
             <Sheet>
               <SheetTrigger asChild>
@@ -260,17 +308,17 @@ function ShoppingHeader() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                 <div className="flex flex-col gap-6 mt-8 h-full">
-                   <MenuItems />
-                 </div>
+                <div className="flex flex-col gap-6 mt-8 h-full">
+                  <MenuItems />
+                </div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
 
-        {/* Mobile Search Bar - Vertical stacked row */}
+        {/* Mobile Search Bar */}
         <div className="lg:hidden w-full px-4 pb-3">
-           <SearchBar isMobile={true} />
+          <SearchBar isMobile={true} />
         </div>
       </div>
     </header>

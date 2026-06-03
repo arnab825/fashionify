@@ -3,48 +3,35 @@ import { Navigate, useLocation } from "react-router-dom";
 function CheckAuth({ isAuthenticated, user, children }) {
   const location = useLocation();
 
-  console.log(location.pathname, isAuthenticated);
-
+  // Root → always go to shop home
   if (location.pathname === "/") {
-    if (!isAuthenticated) {
-      return <Navigate to="/shop/home" />;
-    } else {
-      return <Navigate to="/shop/home" />;
+    return <Navigate to="/shop/home" replace />;
+  }
+
+  // Not authenticated: allow public routes
+  const publicRoutes = ["/login", "/register", "/shop/home", "/shop/listing", "/shop/search", "/shop/about", "/shop/contact"];
+  const isPublicRoute = publicRoutes.some((r) => location.pathname.includes(r));
+
+  if (!isAuthenticated && !isPublicRoute) {
+    // Admin login page is public, redirect others to customer login
+    if (location.pathname.includes("/admin-auth")) {
+      return children;
     }
+    return <Navigate to="/auth/login" replace />;
   }
 
-  if (
-    !isAuthenticated &&
-    !(
-      location.pathname.includes("/login") ||
-      location.pathname.includes("/register") ||
-      location.pathname.includes("/shop/home") ||
-      location.pathname.includes("/shop/listing") ||
-      location.pathname.includes("/shop/search") ||
-      location.pathname.includes("/shop/about") ||
-      location.pathname.includes("/shop/contact")
-    )
-  ) {
-    return <Navigate to="/auth/login" />;
+  // Authenticated users trying to hit login/register → redirect home
+  if (isAuthenticated && (location.pathname.includes("/login") || location.pathname.includes("/register"))) {
+    if (user?.role === "admin") {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+    return <Navigate to="/shop/home" replace />;
   }
 
-  if (
-    isAuthenticated &&
-    (location.pathname.includes("/login") ||
-      location.pathname.includes("/register"))
-  ) {
-    return <Navigate to="/shop/home" />;
+  // Non-admin trying to access /admin/** routes
+  if (isAuthenticated && user?.role !== "admin" && location.pathname.startsWith("/admin")) {
+    return <Navigate to="/unauth-page" replace />;
   }
-
-  if (
-    isAuthenticated &&
-    user?.role !== "admin" &&
-    location.pathname.includes("admin")
-  ) {
-    return <Navigate to="/unauth-page" />;
-  }
-
-
 
   return <>{children}</>;
 }

@@ -39,14 +39,20 @@ function ShoppingProductTile({
   }
 
   return (
-    <Card className="w-full max-w-sm mx-auto group">
-      <div onClick={() => handleGetProductDetails(product?.id)} className="cursor-pointer">
-        <div className="relative">
+    <Card className="w-full mx-auto group flex flex-col h-full overflow-hidden">
+      {/* Clickable image + content area */}
+      <div
+        onClick={() => handleGetProductDetails(product?.id)}
+        className="cursor-pointer flex flex-col flex-1"
+      >
+        {/* Fixed-height image area */}
+        <div className="relative flex-none">
           <img
             src={coverImage}
             alt={product?.title}
-            className="w-full h-[300px] object-contain p-4 bg-muted/10 rounded-t-lg"
+            className="w-full h-[260px] object-contain p-4 bg-muted/10 rounded-t-lg"
           />
+
           {/* Stock badges */}
           {totalStock === 0 ? (
             <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600">
@@ -74,6 +80,7 @@ function ShoppingProductTile({
             </div>
           )}
 
+          {/* Wishlist button */}
           <Button
             variant="ghost"
             size="icon"
@@ -89,22 +96,31 @@ function ShoppingProductTile({
           </Button>
         </div>
 
-        <CardContent className="p-4">
-          <h2 className="text-xl font-bold mb-2 truncate" title={product?.title}>
+        {/* Content — flex-1 so it fills remaining space, pushing footer down */}
+        <CardContent className="p-4 flex-1 flex flex-col">
+          {/* Title — max 2 lines with ellipsis */}
+          <h2
+            className="text-base font-bold mb-2 line-clamp-2 leading-snug min-h-[2.5rem]"
+            title={product?.title}
+          >
             {product?.title}
           </h2>
+
+          {/* Category / Brand */}
           <div className="flex justify-between items-center mb-2">
-            <span className="text-[16px] text-muted-foreground">
+            <span className="text-sm text-muted-foreground line-clamp-1">
               {categoryOptionsMap[product?.category]}
             </span>
-            <span className="text-[16px] text-muted-foreground">
+            <span className="text-sm text-muted-foreground line-clamp-1">
               {brandOptionsMap[product?.brand]}
             </span>
           </div>
+
+          {/* Price */}
           <div className="flex justify-between items-center mb-2">
             <span
               className={`${
-                product?.salePrice > 0 ? "line-through" : ""
+                product?.salePrice > 0 ? "line-through text-muted-foreground" : ""
               } text-lg font-semibold text-primary`}
             >
               ₹{product?.price}
@@ -115,24 +131,42 @@ function ShoppingProductTile({
               </span>
             ) : null}
           </div>
-          {/* Size preview */}
-          {product?.sizeVariants?.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {product.sizeVariants.slice(0, 4).map((v) => (
+
+          {/* Size preview — min-h keeps cards same height even with no sizes */}
+          <div className="flex flex-wrap gap-1 mt-auto min-h-[24px]">
+            {product?.sizeVariants?.slice(0, 4).map((v) => (
+              <span
+                key={v.size}
+                className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${
+                  v.outOfStock || v.stock === 0
+                    ? "text-muted-foreground/40 border-border line-through"
+                    : "text-muted-foreground border-border"
+                }`}
+              >
+                {v.size}
+              </span>
+            ))}
+            {product?.sizeVariants?.length > 4 && (
+              <span className="text-[10px] text-muted-foreground">
+                +{product.sizeVariants.length - 4} more
+              </span>
+            )}
+          </div>
+
+          {/* Tags — show up to 2 */}
+          {product?.tags && product.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {product.tags.slice(0, 2).map((tag) => (
                 <span
-                  key={v.size}
-                  className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${
-                    v.outOfStock || v.stock === 0
-                      ? "text-muted-foreground/40 border-border line-through"
-                      : "text-muted-foreground border-border"
-                  }`}
+                  key={tag}
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700 font-medium"
                 >
-                  {v.size}
+                  {tag}
                 </span>
               ))}
-              {product.sizeVariants.length > 4 && (
-                <span className="text-[10px] text-muted-foreground">
-                  +{product.sizeVariants.length - 4} more
+              {product.tags.length > 2 && (
+                <span className="text-[10px] text-muted-foreground self-center">
+                  +{product.tags.length - 2}
                 </span>
               )}
             </div>
@@ -140,15 +174,18 @@ function ShoppingProductTile({
         </CardContent>
       </div>
 
-      <CardFooter>
+      {/* Footer always at the bottom */}
+      <CardFooter className="px-4 pb-4 pt-0">
         {totalStock === 0 ? (
-          <Button className="w-full opacity-60 cursor-not-allowed">Out Of Stock</Button>
+          <Button className="w-full opacity-60 cursor-not-allowed" disabled>
+            Out Of Stock
+          </Button>
         ) : (
           <Button
             onClick={() => handleGetProductDetails(product?.id)}
             className="w-full"
           >
-            View & Select Size
+            View &amp; Select Size
           </Button>
         )}
       </CardFooter>

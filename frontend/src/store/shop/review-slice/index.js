@@ -4,6 +4,7 @@ import axios from "axios";
 const initialState = {
   isLoading: false,
   reviews: [],
+  eligibility: { eligible: false, reason: "", isChecking: false },
 };
 
 export const addReview = createAsyncThunk(
@@ -11,9 +12,9 @@ export const addReview = createAsyncThunk(
   async (formdata) => {
     const response = await axios.post(
       `http://localhost:8080/api/shop/review/add`,
-      formdata
+      formdata,
+      { withCredentials: true }
     );
-
     return response.data;
   }
 );
@@ -22,14 +23,28 @@ export const getReviews = createAsyncThunk("/order/getReviews", async (id) => {
   const response = await axios.get(
     `http://localhost:8080/api/shop/review/${id}`
   );
-
   return response.data;
 });
+
+export const checkRatingEligibility = createAsyncThunk(
+  "/order/checkEligibility",
+  async ({ productId, userId }) => {
+    const response = await axios.get(
+      `http://localhost:8080/api/shop/review/eligibility/${productId}?userId=${userId}`,
+      { withCredentials: true }
+    );
+    return response.data;
+  }
+);
 
 const reviewSlice = createSlice({
   name: "reviewSlice",
   initialState,
-  reducers: {},
+  reducers: {
+    resetEligibility: (state) => {
+      state.eligibility = { eligible: false, reason: "", isChecking: false };
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getReviews.pending, (state) => {
@@ -42,8 +57,22 @@ const reviewSlice = createSlice({
       .addCase(getReviews.rejected, (state) => {
         state.isLoading = false;
         state.reviews = [];
+      })
+      .addCase(checkRatingEligibility.pending, (state) => {
+        state.eligibility.isChecking = true;
+      })
+      .addCase(checkRatingEligibility.fulfilled, (state, action) => {
+        state.eligibility = {
+          eligible: action.payload.eligible,
+          reason: action.payload.reason || "",
+          isChecking: false,
+        };
+      })
+      .addCase(checkRatingEligibility.rejected, (state) => {
+        state.eligibility = { eligible: false, reason: "", isChecking: false };
       });
   },
 });
 
+export const { resetEligibility } = reviewSlice.actions;
 export default reviewSlice.reducer;

@@ -2,9 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const initialState = {
-  razorpayOrderId: null,
-  amount: null,
-  currency: null,
   isLoading: false,
   orderId: null,
   orderList: [],
@@ -18,23 +15,17 @@ export const createNewOrder = createAsyncThunk(
       "http://localhost:8080/api/shop/order/create",
       orderData
     );
-
     return response.data;
   }
 );
 
-export const capturePayment = createAsyncThunk(
-  "/order/capturePayment",
-  async ({ paymentId, payerId, orderId }) => {
+export const confirmSimulatedOrder = createAsyncThunk(
+  "/order/confirmSimulatedOrder",
+  async (orderId) => {
     const response = await axios.post(
-      "http://localhost:8080/api/shop/order/capture",
-      {
-        paymentId,
-        payerId,
-        orderId,
-      }
+      "http://localhost:8080/api/shop/order/confirm-simulated",
+      { orderId }
     );
-
     return response.data;
   }
 );
@@ -45,7 +36,6 @@ export const getAllOrdersByUserId = createAsyncThunk(
     const response = await axios.get(
       `http://localhost:8080/api/shop/order/list/${userId}`
     );
-
     return response.data;
   }
 );
@@ -56,7 +46,6 @@ export const getOrderDetails = createAsyncThunk(
     const response = await axios.get(
       `http://localhost:8080/api/shop/order/details/${id}`
     );
-
     return response.data;
   }
 );
@@ -76,21 +65,28 @@ const shoppingOrderSlice = createSlice({
       })
       .addCase(createNewOrder.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.razorpayOrderId = action.payload.razorpayOrderId;
-        state.amount = action.payload.amount;
-        state.currency = action.payload.currency;
-        state.orderId = action.payload.orderId;
-        sessionStorage.setItem(
-          "currentOrderId",
-          JSON.stringify(action.payload.orderId)
-        );
+        state.orderId = action.payload.orderId ?? null;
+        if (action.payload.orderId) {
+          sessionStorage.setItem(
+            "currentOrderId",
+            JSON.stringify(action.payload.orderId)
+          );
+        }
       })
       .addCase(createNewOrder.rejected, (state) => {
         state.isLoading = false;
-        state.razorpayOrderId = null;
-        state.amount = null;
-        state.currency = null;
         state.orderId = null;
+      })
+      .addCase(confirmSimulatedOrder.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(confirmSimulatedOrder.fulfilled, (state) => {
+        state.isLoading = false;
+        state.orderId = null;
+        sessionStorage.removeItem("currentOrderId");
+      })
+      .addCase(confirmSimulatedOrder.rejected, (state) => {
+        state.isLoading = false;
       })
       .addCase(getAllOrdersByUserId.pending, (state) => {
         state.isLoading = true;

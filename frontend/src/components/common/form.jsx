@@ -9,6 +9,8 @@ import {
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 function CommonForm({
   formControls,
@@ -19,29 +21,56 @@ function CommonForm({
   isBtnDisabled,
   isLoading,
 }) {
+  // Track show/hide state per password field
+  const [showPasswordMap, setShowPasswordMap] = useState({});
+
+  function toggleShowPassword(name) {
+    setShowPasswordMap((prev) => ({ ...prev, [name]: !prev[name] }));
+  }
+
   function renderInputsByComponentType(getControlItem) {
     let element = null;
     const value = formData[getControlItem.name] || "";
+    const isPasswordField = getControlItem.type === "password";
+    const isVisible = showPasswordMap[getControlItem.name];
+    const inputType = isPasswordField && isVisible ? "text" : getControlItem.type;
 
     switch (getControlItem.componentType) {
       case "input":
         element = (
-          <Input
-            name={getControlItem.name}
-            placeholder={getControlItem.placeholder}
-            id={getControlItem.name}
-            type={getControlItem.type}
-            value={value}
-            onChange={(event) =>
-              setFormData({
-                ...formData,
-                [getControlItem.name]: event.target.value,
-              })
-            }
-          />
+          <div className="relative">
+            <Input
+              name={getControlItem.name}
+              placeholder={getControlItem.placeholder}
+              id={getControlItem.name}
+              type={inputType}
+              value={value}
+              onChange={(event) =>
+                setFormData({
+                  ...formData,
+                  [getControlItem.name]: event.target.value,
+                })
+              }
+              className={isPasswordField ? "pr-10" : ""}
+            />
+            {isPasswordField && (
+              <button
+                type="button"
+                onClick={() => toggleShowPassword(getControlItem.name)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={isVisible ? "Hide password" : "Show password"}
+              >
+                {isVisible ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            )}
+          </div>
         );
-
         break;
+
       case "select":
         element = (
           <Select
@@ -67,14 +96,14 @@ function CommonForm({
             </SelectContent>
           </Select>
         );
-
         break;
+
       case "textarea":
         element = (
           <Textarea
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
-            id={getControlItem.id}
+            id={getControlItem.name}
             value={value}
             onChange={(event) =>
               setFormData({
@@ -84,7 +113,6 @@ function CommonForm({
             }
           />
         );
-
         break;
 
       default:
@@ -119,8 +147,12 @@ function CommonForm({
           </div>
         ))}
       </div>
-      <Button disabled={isBtnDisabled} isLoading={isLoading} type="submit" className="mt-5 w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 border-0 text-white rounded-xl py-6 font-bold shadow-lg shadow-purple-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all">
-        {buttonText || "Submit"}
+      <Button
+        disabled={isBtnDisabled || isLoading}
+        type="submit"
+        className="mt-5 w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 border-0 text-white rounded-xl py-6 font-bold shadow-lg shadow-purple-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all"
+      >
+        {isLoading ? "Please wait…" : buttonText || "Submit"}
       </Button>
     </form>
   );

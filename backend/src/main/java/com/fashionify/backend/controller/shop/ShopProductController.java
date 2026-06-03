@@ -4,6 +4,9 @@ import com.fashionify.backend.entity.Product;
 import com.fashionify.backend.entity.ProductSizeVariant;
 import com.fashionify.backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,48 +21,48 @@ public class ShopProductController {
     @Autowired
     private ProductRepository productRepository;
 
+    private static final int DEFAULT_PAGE_SIZE = 8;
+
+    /**
+     * GET /api/shop/products/get
+     * Query params: category (CSV), brand (CSV), sortBy, page (0-indexed), size (default 8)
+     * Returns: { products, currentPage, totalPages, totalProducts }
+     */
     @GetMapping("/get")
     public ResponseEntity<?> getFilteredProducts(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String brand,
-            @RequestParam(required = false, defaultValue = "price-lowtohigh") String sortBy) {
+            @RequestParam(required = false, defaultValue = "price-lowtohigh") String sortBy,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "8") int size) {
 
-        List<Product> products;
+        Sort sort = buildSort(sortBy);
+        PageRequest pageRequest = PageRequest.of(page, Math.min(size, DEFAULT_PAGE_SIZE), sort);
+
+        Page<Product> productPage;
 
         if (category != null && !category.isEmpty() && brand != null && !brand.isEmpty()) {
             List<String> categories = Arrays.asList(category.split(","));
             List<String> brands = Arrays.asList(brand.split(","));
-            products = productRepository.findByCategoryInAndBrandIn(categories, brands);
+            productPage = productRepository.findByCategoryInAndBrandIn(categories, brands, pageRequest);
+        } else if (category != null && !category.isEmpty()) {
+            List<String> categories = Arrays.asList(category.split(","));
+            productPage = productRepository.findByCategoryIn(categories, pageRequest);
+        } else if (brand != null && !brand.isEmpty()) {
+            List<String> brands = Arrays.asList(brand.split(","));
+            productPage = productRepository.findByBrandIn(brands, pageRequest);
         } else {
-            products = productRepository.findAll();
-            if (category != null && !category.isEmpty()) {
-                List<String> categories = Arrays.asList(category.split(","));
-                products = products.stream().filter(p -> categories.contains(p.getCategory())).collect(Collectors.toList());
-            }
-            if (brand != null && !brand.isEmpty()) {
-                List<String> brands = Arrays.asList(brand.split(","));
-                products = products.stream().filter(p -> brands.contains(p.getBrand())).collect(Collectors.toList());
-            }
+            productPage = productRepository.findAll(pageRequest);
         }
 
-        // Sorting
-        switch (sortBy) {
-            case "price-lowtohigh":
-                products.sort((p1, p2) -> Double.compare(p1.getPrice(), p2.getPrice()));
-                break;
-            case "price-hightolow":
-                products.sort((p1, p2) -> Double.compare(p2.getPrice(), p1.getPrice()));
-                break;
-            case "title-atoz":
-                products.sort((p1, p2) -> p1.getTitle().compareToIgnoreCase(p2.getTitle()));
-                break;
-            case "title-ztoa":
-                products.sort((p1, p2) -> p2.getTitle().compareToIgnoreCase(p1.getTitle()));
-                break;
-        }
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("success", true);
+        response.put("products", productPage.getContent().stream().map(this::enrichProduct).collect(Collectors.toList()));
+        response.put("currentPage", productPage.getNumber());
+        response.put("totalPages", productPage.getTotalPages());
+        response.put("totalProducts", productPage.getTotalElements());
 
-        List<Map<String, Object>> enriched = products.stream().map(this::enrichProduct).collect(Collectors.toList());
-        return ResponseEntity.ok(Map.of("success", true, "data", enriched));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/get/{id}")
@@ -69,7 +72,19 @@ public class ShopProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    private Map<String, Object> enrichProduct(Product product) {
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private Sort buildSort(String sortBy) {
+        switch (sortBy) {
+            case "price-lowtohigh":  return Sort.by(Sort.Direction.ASC, "price");
+            case "price-hightolow":  return Sort.by(Sort.Direction.DESC, "price");
+            case "title-atoz":       return Sort.by(Sort.Direction.ASC, "title");
+            case "title-ztoa":       return Sort.by(Sort.Direction.DESC, "title");
+            default:                 return Sort.by(Sort.Direction.ASC, "price");
+        }
+    }
+
+    public Map<String, Object> enrichProduct(Product product) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", product.getId());
         map.put("title", product.getTitle());
@@ -81,6 +96,7 @@ public class ShopProductController {
         map.put("averageReview", product.getAverageReview());
         map.put("createdAt", product.getCreatedAt());
         map.put("updatedAt", product.getUpdatedAt());
+        map.put("tags", product.getTags() != null ? product.getTags() : List.of());
 
         map.put("images", product.getImages());
         map.put("image", product.getImage());

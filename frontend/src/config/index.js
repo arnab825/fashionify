@@ -47,6 +47,35 @@ export const sizeOptionsByCategory = {
   accessories: ["One Size", "S/M", "M/L"],
 };
 
+/** Predefined tags per product category. Max 5 per product. */
+export const tagsByCategory = {
+  men: [
+    "trendy", "oversized", "streetwear", "genz", "pure cotton",
+    "premium cotton", "graphic print", "minimalist", "casual", "summer wear",
+    "formal", "office wear", "slim fit", "business casual", "linen", "luxury",
+    "relaxed fit", "vintage wash", "stretch denim", "urban", "baggy",
+    "heavy weight", "fleece", "cozy", "winter essential",
+  ],
+  women: [
+    "trendy", "floral", "minimalist", "casual", "summer wear", "festive",
+    "ethnic", "boho", "western", "elegant", "premium", "party wear",
+    "oversized", "slim fit", "comfort fit", "linen", "pastel",
+    "graphic print", "streetwear", "pure cotton",
+  ],
+  kids: [
+    "playful", "comfortable", "soft cotton", "summer wear", "school",
+    "casual", "unisex", "trendy", "pastel", "vibrant colors",
+  ],
+  accessories: [
+    "trending", "everyday carry", "minimalist", "premium", "fashion essential",
+    "gifting", "luxury", "unisex", "statement piece", "classic",
+  ],
+  footwear: [
+    "casual", "formal", "sports", "lightweight", "premium",
+    "everyday", "slip-on", "lace-up", "comfort", "trending",
+  ],
+};
+
 export const addProductFormElements = [
   {
     label: "Title",

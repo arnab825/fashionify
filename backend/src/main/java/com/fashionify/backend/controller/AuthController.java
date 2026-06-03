@@ -53,6 +53,19 @@ public class AuthController {
                     .body(new MessageResponse(false, "Error: Username is already taken!"));
         }
 
+        // Backend password strength validation
+        String password = signUpRequest.getPassword();
+        if (password == null || password.length() < 8
+                || !password.matches(".*[A-Z].*")
+                || !password.matches(".*[a-z].*")
+                || !password.matches(".*[0-9].*")
+                || !password.matches(".*[^A-Za-z0-9].*")) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse(false,
+                            "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."));
+        }
+
         long userCount = userRepository.count();
         String role = (userCount == 0) ? "admin" : "user";
 
@@ -78,24 +91,32 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String role = userDetails.getAuthorities().iterator().next().getAuthority()
+                .replace("ROLE_", "").toLowerCase();
+
+        // User login portal must only allow role=user
+        if (!"user".equals(role)) {
+            return ResponseEntity.status(403)
+                    .body(new MessageResponse(false,
+                            "Access denied. Admin accounts must use the Admin Login portal."));
+        }
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         Cookie cookie = new Cookie("token", jwt);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
         cookie.setMaxAge(60 * 60 * 24);
-        // SameSite=Lax allows the cookie to be sent on same-site navigations and top-level cross-site GET
         response.addCookie(cookie);
         response.addHeader("Set-Cookie",
             "token=" + jwt + "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
 
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("email", userDetails.getEmail());
-        userMap.put("role", userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "").toLowerCase());
+        userMap.put("role", role);
         userMap.put("id", userDetails.getId());
         userMap.put("userName", userDetails.getUsername());
 

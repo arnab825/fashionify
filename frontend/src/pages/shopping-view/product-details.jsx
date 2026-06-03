@@ -1,4 +1,4 @@
-import { StarIcon, ChevronRight, ChevronLeft, Flame, AlertTriangle, Ruler } from "lucide-react";
+import { StarIcon, ChevronRight, ChevronLeft, Flame, AlertTriangle, Ruler, Share2, BadgeCheck, Tag } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import StarRatingComponent from "@/components/common/star-rating";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { addReview, getReviews } from "@/store/shop/review-slice";
+import { addReview, getReviews, checkRatingEligibility, resetEligibility } from "@/store/shop/review-slice";
 
 function ShoppingProductDetails() {
   const { id } = useParams();
@@ -23,7 +23,7 @@ function ShoppingProductDetails() {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
-  const { reviews } = useSelector((state) => state.shopReview);
+  const { reviews, eligibility } = useSelector((state) => state.shopReview);
   const { productDetails, isLoading } = useSelector((state) => state.shopProducts);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,8 +32,16 @@ function ShoppingProductDetails() {
     if (id) {
       dispatch(fetchProductDetails(id));
       dispatch(getReviews(id));
+      dispatch(resetEligibility());
     }
   }, [id, dispatch]);
+
+  // Check review eligibility for authenticated users
+  useEffect(() => {
+    if (isAuthenticated && user?.id && id) {
+      dispatch(checkRatingEligibility({ productId: id, userId: user.id }));
+    }
+  }, [isAuthenticated, user?.id, id, dispatch]);
 
   // Reset selected size when product changes
   useEffect(() => {
@@ -61,6 +69,24 @@ function ShoppingProductDetails() {
   // Low-stock logic
   const isOverallLowStock = totalStock > 0 && totalStock <= 10;
   const isSelectedSizeLowStock = selectedVariant && selectedVariant.stock <= 5 && selectedVariant.stock > 0;
+
+  async function handleShare() {
+    const shareData = {
+      title: productDetails?.title,
+      text: `Check out ${productDetails?.title} on Fashionify!`,
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({ title: "Link copied to clipboard!" });
+      }
+    } catch {
+      // User cancelled share or clipboard failed
+    }
+  }
 
   function handleAddToCart() {
     if (!isAuthenticated) {
@@ -134,8 +160,20 @@ function ShoppingProductDetails() {
 
   if (isLoading || !productDetails) {
     return (
-      <div className="container mx-auto px-4 py-16 flex justify-center items-center h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Image skeleton */}
+          <div className="rounded-2xl bg-muted/30 border border-border aspect-[4/5] animate-pulse" />
+          {/* Details skeleton */}
+          <div className="space-y-4">
+            <div className="h-8 bg-muted/50 rounded-xl w-3/4 animate-pulse" />
+            <div className="h-5 bg-muted/50 rounded-xl w-1/2 animate-pulse" />
+            <div className="h-10 bg-muted/50 rounded-xl w-1/3 animate-pulse" />
+            <div className="h-4 bg-muted/30 rounded w-full animate-pulse" />
+            <div className="h-4 bg-muted/30 rounded w-4/5 animate-pulse" />
+            <div className="h-14 bg-muted/30 rounded-xl w-full mt-8 animate-pulse" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -279,6 +317,22 @@ function ShoppingProductDetails() {
               <p className="text-muted-foreground leading-relaxed">
                 {productDetails?.description}
               </p>
+
+              {/* Tags */}
+              {productDetails?.tags && productDetails.tags.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <Tag className="w-4 h-4 text-muted-foreground flex-none" />
+                  {productDetails.tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      to={`/shop/listing`}
+                      className="text-xs px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium border border-purple-200 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-800/40 transition-colors"
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* ── Size Selector ──────────────────────────────────── */}
@@ -357,8 +411,8 @@ function ShoppingProductDetails() {
               </div>
             ) : null}
 
-            {/* ── Add to Cart Button ──────────────────────────────── */}
-            <div className="pt-2">
+            {/* ── Add to Cart + Share Buttons ──────────────────────── */}
+            <div className="pt-2 space-y-3">
               {totalStock === 0 ? (
                 <Button className="w-full h-14 text-lg font-bold bg-muted text-muted-foreground cursor-not-allowed rounded-xl" disabled>
                   Out of Stock
@@ -381,6 +435,15 @@ function ShoppingProductDetails() {
                   </Button>
                 </div>
               )}
+              {/* Share button */}
+              <Button
+                variant="outline"
+                onClick={handleShare}
+                className="w-full h-11 gap-2 rounded-xl border-border hover:border-purple-500 hover:text-purple-600 transition-colors"
+              >
+                <Share2 className="h-4 w-4" />
+                Share this Product
+              </Button>
             </div>
 
             <Separator />
@@ -405,9 +468,14 @@ function ShoppingProductDetails() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 space-y-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between flex-wrap gap-1">
                             <h3 className="font-bold text-foreground">{reviewItem?.userName}</h3>
-                            <span className="text-xs text-muted-foreground">Verified Buyer</span>
+                            {reviewItem?.verifiedPurchase && (
+                              <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-semibold">
+                                <BadgeCheck className="w-4 h-4" />
+                                Verified Purchase
+                              </span>
+                            )}
                           </div>
                           <StarRatingComponent rating={reviewItem?.reviewValue} />
                           <p className="text-muted-foreground leading-relaxed">
@@ -425,32 +493,53 @@ function ShoppingProductDetails() {
                 )}
               </div>
 
-              {/* Add Review Form */}
-              <div className="p-6 rounded-xl border border-border bg-card shadow-sm">
-                <Label className="text-lg font-bold mb-4 block">Write a review</Label>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium">Your Rating:</span>
-                    <StarRatingComponent rating={rating} handleRatingChange={handleRatingChange} />
+              {/* Add Review Form — only shown when eligible */}
+              {isAuthenticated ? (
+                eligibility.isChecking ? (
+                  <div className="p-4 rounded-xl border border-border bg-card/50 text-sm text-muted-foreground animate-pulse">
+                    Checking eligibility…
                   </div>
-                  <div className="flex gap-4">
-                    <Input
-                      name="reviewMsg"
-                      value={reviewMsg}
-                      onChange={(e) => setReviewMsg(e.target.value)}
-                      placeholder="Share your thoughts about this product..."
-                      className="h-12 rounded-xl"
-                    />
-                    <Button
-                      onClick={handleAddReview}
-                      disabled={reviewMsg.trim() === "" || rating === 0}
-                      className="h-12 px-8 rounded-xl font-bold"
-                    >
-                      Post Review
-                    </Button>
+                ) : eligibility.eligible ? (
+                  <div className="p-6 rounded-xl border border-border bg-card shadow-sm">
+                    <Label className="text-lg font-bold mb-4 block">Write a review</Label>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-medium">Your Rating:</span>
+                        <StarRatingComponent rating={rating} handleRatingChange={handleRatingChange} />
+                      </div>
+                      <div className="flex gap-4">
+                        <Input
+                          name="reviewMsg"
+                          value={reviewMsg}
+                          onChange={(e) => setReviewMsg(e.target.value)}
+                          placeholder="Share your thoughts about this product..."
+                          className="h-12 rounded-xl"
+                        />
+                        <Button
+                          onClick={handleAddReview}
+                          disabled={reviewMsg.trim() === "" || rating === 0}
+                          className="h-12 px-8 rounded-xl font-bold"
+                        >
+                          Post Review
+                        </Button>
+                      </div>
+                    </div>
                   </div>
+                ) : (
+                  <div className="p-5 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 flex items-center gap-3">
+                    <BadgeCheck className="w-5 h-5 text-amber-500 flex-none" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Rating available after purchase</p>
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">{eligibility.reason || "Purchase this product and wait for delivery to leave a review."}</p>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="p-5 rounded-xl border border-border bg-muted/30 text-sm text-muted-foreground flex items-center gap-3">
+                  <StarIcon className="w-5 h-5 flex-none" />
+                  <span><Link to="/auth/login" className="text-purple-600 hover:underline font-medium">Login</Link> to leave a review after purchasing.</span>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
-import { addProductFormElements, sizeOptionsByCategory } from "@/config";
+import { addProductFormElements, sizeOptionsByCategory, tagsByCategory } from "@/config";
 import {
   addNewProduct,
   deleteProduct,
@@ -33,6 +33,7 @@ const initialFormData = {
   price: "",
   salePrice: "",
   averageReview: 0,
+  tags: [],
 };
 
 const emptySizeVariant = { size: "", stock: "", measurements: "" };
@@ -48,6 +49,8 @@ function AdminProducts() {
 
   // Size variants state
   const [sizeVariants, setSizeVariants] = useState([]);
+  // Tags state (max 5)
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const [currentEditedId, setCurrentEditedId] = useState(null);
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
@@ -102,7 +105,9 @@ function AdminProducts() {
         salePrice: product.salePrice || "",
         averageReview: product.averageReview || 0,
         images: product.images || [],
+        tags: product.tags || [],
       });
+      setSelectedTags(product.tags || []);
       setUploadedImageUrls(product.images || []);
       setImageFiles([]);
       setSizeVariants(
@@ -112,6 +117,8 @@ function AdminProducts() {
           measurements: v.measurements || "",
         }))
       );
+    } else {
+      setSelectedTags([]);
     }
   }
 
@@ -122,6 +129,7 @@ function AdminProducts() {
     setImageFiles([]);
     setUploadedImageUrls([]);
     setSizeVariants([]);
+    setSelectedTags([]);
   }
 
   function onSubmit(event) {
@@ -130,6 +138,7 @@ function AdminProducts() {
     const payload = {
       ...formData,
       images: uploadedImageUrls,
+      tags: selectedTags,
       sizeVariants: sizeVariants.map((v) => ({
         size: v.size,
         stock: parseInt(v.stock) || 0,
@@ -189,11 +198,10 @@ function AdminProducts() {
           {lowStockCount > 0 && (
             <button
               onClick={() => setShowLowStockOnly((s) => !s)}
-              className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-all ${
-                showLowStockOnly
+              className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-all ${showLowStockOnly
                   ? "bg-amber-500 text-white border-amber-500"
                   : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700"
-              }`}
+                }`}
             >
               <AlertTriangle className="w-4 h-4" />
               {lowStockCount} Low Stock{showLowStockOnly ? " — Show All" : ""}
@@ -207,15 +215,15 @@ function AdminProducts() {
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
         {displayList.length > 0
           ? displayList.map((productItem) => (
-              <AdminProductTile
-                key={productItem.id}
-                setFormData={(p) => openSheet(p)}
-                setOpenCreateProductsDialog={setOpenCreateProductsDialog}
-                setCurrentEditedId={setCurrentEditedId}
-                product={productItem}
-                handleDelete={handleDelete}
-              />
-            ))
+            <AdminProductTile
+              key={productItem.id}
+              setFormData={(p) => openSheet(p)}
+              setOpenCreateProductsDialog={setOpenCreateProductsDialog}
+              setCurrentEditedId={setCurrentEditedId}
+              product={productItem}
+              handleDelete={handleDelete}
+            />
+          ))
           : (
             <div className="col-span-full text-center py-20 text-muted-foreground">
               {showLowStockOnly ? "No low-stock products 🎉" : "No products yet. Add your first product!"}
@@ -276,11 +284,10 @@ function AdminProducts() {
                         type="button"
                         onClick={() => addSuggestedSize(size)}
                         disabled={!!already}
-                        className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
-                          already
+                        className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${already
                             ? "bg-purple-600 text-white border-purple-600 opacity-70 cursor-not-allowed"
                             : "border-border hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                        }`}
+                          }`}
                       >
                         {size}
                       </button>
@@ -344,6 +351,70 @@ function AdminProducts() {
             >
               <Plus className="w-4 h-4 mr-1" /> Add Custom Size
             </Button>
+          </div>
+
+          {/* Tag Picker */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-base font-semibold">Tags</Label>
+              <span className="text-xs text-muted-foreground">{selectedTags.length}/5 selected</span>
+            </div>
+
+            {/* Selected tags chips */}
+            {selectedTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {selectedTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full font-medium border border-purple-200 dark:border-purple-700"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTags((prev) => prev.filter((t) => t !== tag))}
+                      className="hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Available tags based on category */}
+            <p className="text-xs text-muted-foreground mb-2">
+              {formData.category
+                ? `Suggested tags for ${formData.category}:`
+                : "Select a category first to see tag suggestions."}
+            </p>
+            <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+              {(tagsByCategory[formData.category] || []).map((tag) => {
+                const isSelected = selectedTags.includes(tag);
+                const maxReached = selectedTags.length >= 5 && !isSelected;
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    disabled={maxReached}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedTags((prev) => prev.filter((t) => t !== tag));
+                      } else if (selectedTags.length < 5) {
+                        setSelectedTags((prev) => [...prev, tag]);
+                      }
+                    }}
+                    className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${isSelected
+                        ? "bg-purple-600 text-white border-purple-600"
+                        : maxReached
+                          ? "opacity-40 cursor-not-allowed border-border"
+                          : "border-border hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                      }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Submit */}

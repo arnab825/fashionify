@@ -8,7 +8,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews",
+       indexes = @Index(name = "idx_review_product", columnList = "product_id"),
+       uniqueConstraints = @UniqueConstraint(name = "uq_review_user_product",
+               columnNames = {"product_id", "user_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,6 +37,11 @@ public class Review {
 
     @Column(nullable = false)
     private Integer reviewValue;
+
+    /** True if the reviewer purchased this product and the order was delivered. */
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean verifiedPurchase = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

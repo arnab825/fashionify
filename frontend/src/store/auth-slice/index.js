@@ -25,16 +25,24 @@ export const registerUser = createAsyncThunk(
 
 export const loginUser = createAsyncThunk(
   "/auth/login",
-
   async (formData) => {
     const response = await axios.post(
       "http://localhost:8080/api/auth/login",
       formData,
-      {
-        withCredentials: true,
-      }
+      { withCredentials: true }
     );
+    return response.data;
+  }
+);
 
+export const adminLoginUser = createAsyncThunk(
+  "/auth/adminLogin",
+  async (formData) => {
+    const response = await axios.post(
+      "http://localhost:8080/api/admin-auth/login",
+      formData,
+      { withCredentials: true }
+    );
     return response.data;
   }
 );
@@ -105,8 +113,6 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        console.log(action);
-
         state.isLoading = false;
         state.user = action.payload.success ? { ...action.payload.user, avatar: sessionStorage.getItem("userAvatar") || null } : null;
         state.isAuthenticated = action.payload.success;
@@ -129,7 +135,20 @@ const authSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
       })
-      .addCase(logoutUser.fulfilled, (state, action) => {
+      .addCase(adminLoginUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(adminLoginUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.success ? { ...action.payload.user, avatar: sessionStorage.getItem("userAvatar") || null } : null;
+        state.isAuthenticated = action.payload.success;
+      })
+      .addCase(adminLoginUser.rejected, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;

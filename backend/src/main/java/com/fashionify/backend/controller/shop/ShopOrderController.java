@@ -6,12 +6,10 @@ import com.fashionify.backend.entity.OrderItem;
 import com.fashionify.backend.entity.User;
 import com.fashionify.backend.repository.CartRepository;
 import com.fashionify.backend.repository.OrderRepository;
+import com.fashionify.backend.repository.ProductRepository;
 import com.fashionify.backend.repository.ProductSizeVariantRepository;
 import com.fashionify.backend.repository.UserRepository;
-import com.razorpay.RazorpayClient;
-import com.razorpay.RazorpayException;
-import com.razorpay.Utils;
-import org.json.JSONObject;
+import com.fashionify.backend.service.UserPreferenceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 @CrossOrigin(origins = "http://localhost:5173", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/shop/order")
@@ -38,126 +37,154 @@ public class ShopOrderController {
     @Autowired
     private ProductSizeVariantRepository sizeVariantRepository;
 
-    @Value("${razorpay.key-id}")
-    private String razorpayKeyId;
+    @Autowired
+    private ProductRepository productRepository;
 
-    @Value("${razorpay.key-secret}")
-    private String razorpayKeySecret;
+    @Autowired
+    private UserPreferenceService userPreferenceService;
+
+    /**
+     * Payment mode: "simulated" (default) or "razorpay".
+     * Set app.payment.mode=razorpay in application.properties to re-enable Razorpay.
+     */
+    @Value("${app.payment.mode:simulated}")
+    private String paymentMode;
 
     @PostMapping("/create")
     public ResponseEntity<?> createOrder(@RequestBody Order orderDetails) {
         Optional<User> userOpt = userRepository.findById(orderDetails.getUser().getId());
         if (userOpt.isEmpty()) {
-             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "User not found"));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "User not found"));
         }
 
         Order order = new Order();
         order.setUser(userOpt.get());
         order.setCartId(orderDetails.getCartId());
-        order.setOrderStatus("pending");
-        order.setPaymentMethod(orderDetails.getPaymentMethod());
+        order.setOrderStatus("pending_payment");
+        order.setPaymentMethod("simulated_cod");
         order.setPaymentStatus("pending");
         order.setTotalAmount(orderDetails.getTotalAmount());
         order.setOrderDate(LocalDateTime.now());
         order.setOrderUpdateDate(LocalDateTime.now());
         order.setAddressInfo(orderDetails.getAddressInfo());
-        
+
         // Save order items
         if (orderDetails.getOrderItems() != null) {
             orderDetails.getOrderItems().forEach(order::addOrderItem);
         }
-        
+
         Order savedOrder = orderRepository.save(order);
-        
-        try {
-            RazorpayClient razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
-            JSONObject orderRequest = new JSONObject();
-            
-            // Amount in paise (multiply by 100)
-            int amountInPaise = (int) (orderDetails.getTotalAmount() * 100);
-            orderRequest.put("amount", amountInPaise);
-            orderRequest.put("currency", "INR");
-            orderRequest.put("receipt", "txn_" + savedOrder.getId());
 
-            com.razorpay.Order razorpayOrder = razorpayClient.orders.create(orderRequest);
-            String rzpOrderId = razorpayOrder.get("id");
-            
-            // Update order with razorpay tracking id
-            savedOrder.setPaymentId(rzpOrderId);
-            orderRepository.save(savedOrder);
-
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "razorpayOrderId", rzpOrderId,
-                    "amount", amountInPaise,
-                    "currency", "INR",
-                    "orderId", savedOrder.getId()
-            ));
-        } catch (RazorpayException e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Error initializing Razorpay order: " + e.getMessage()));
+        if ("razorpay".equalsIgnoreCase(paymentMode)) {
+            // ── Razorpay integration placeholder ──────────────────────────────────
+            // To re-enable:
+            // 1. Set app.payment.mode=razorpay in application.properties
+            // 2. Add real RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET to .env
+            // 3. Un-comment the Razorpay block below and re-import dependencies.
+            //
+            // try {
+            //     RazorpayClient client = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
+            //     JSONObject req = new JSONObject();
+            //     req.put("amount", (int)(orderDetails.getTotalAmount() * 100));
+            //     req.put("currency", "INR");
+            //     req.put("receipt", "txn_" + savedOrder.getId());
+            //     com.razorpay.Order rzpOrder = client.orders.create(req);
+            //     String rzpId = rzpOrder.get("id");
+            //     savedOrder.setPaymentId(rzpId);
+            //     orderRepository.save(savedOrder);
+            //     return ResponseEntity.ok(Map.of(
+            //         "success", true, "razorpayOrderId", rzpId,
+            //         "amount", (int)(orderDetails.getTotalAmount() * 100),
+            //         "currency", "INR", "orderId", savedOrder.getId()
+            //     ));
+            // } catch (Exception e) {
+            //     return ResponseEntity.internalServerError()
+            //         .body(Map.of("success", false, "message", "Razorpay error: " + e.getMessage()));
+            // }
+            return ResponseEntity.internalServerError()
+                .body(Map.of("success", false, "message", "Razorpay mode not configured. Set real API keys."));
         }
+
+        // ── Simulated mode (default) ───────────────────────────────────────────
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "orderId", savedOrder.getId(),
+            "simulatedMode", true,
+            "message", "Order created successfully (simulated checkout)"
+        ));
     }
 
-    @PostMapping("/capture")
-    public ResponseEntity<?> capturePayment(@RequestBody Map<String, String> payload) {
-        String razorpayPaymentId = payload.get("razorpayPaymentId");
-        String razorpayOrderId = payload.get("razorpayOrderId");
-        String razorpaySignature = payload.get("razorpaySignature");
-        Long orderId = Long.parseLong(payload.get("orderId"));
+    /**
+     * Simulated payment confirmation — marks order as confirmed and clears cart.
+     * In Razorpay mode this would verify the payment signature.
+     */
+    @PostMapping("/confirm-simulated")
+    public ResponseEntity<?> confirmSimulatedOrder(@RequestBody Map<String, Object> payload) {
+        Object orderIdObj = payload.get("orderId");
+        if (orderIdObj == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "orderId is required"));
+        }
+
+        Long orderId;
+        try {
+            orderId = Long.parseLong(orderIdObj.toString());
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Invalid orderId"));
+        }
 
         Optional<Order> orderOpt = orderRepository.findById(orderId);
         if (orderOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        try {
-            // Verify Signature
-            JSONObject options = new JSONObject();
-            options.put("razorpay_order_id", razorpayOrderId);
-            options.put("razorpay_payment_id", razorpayPaymentId);
-            options.put("razorpay_signature", razorpaySignature);
+        Order order = orderOpt.get();
+        order.setPaymentStatus("simulated_paid");
+        order.setOrderStatus("confirmed");
+        order.setOrderUpdateDate(LocalDateTime.now());
+        orderRepository.save(order);
 
-            boolean isValidSignature = Utils.verifyPaymentSignature(options, razorpayKeySecret);
-
-            if (isValidSignature) {
-                Order order = orderOpt.get();
-                order.setPaymentStatus("paid");
-                order.setOrderStatus("confirmed");
-                order.setPaymentId(razorpayPaymentId);
-                order.setPayerId(razorpayOrderId);
-
-                orderRepository.save(order);
-
-                // Decrement stock for each ordered size variant
-                for (OrderItem item : order.getOrderItems()) {
-                    if (item.getProductId() != null && item.getSelectedSize() != null) {
-                        Long pid = Long.parseLong(item.getProductId());
-                        sizeVariantRepository.findByProductId(pid).stream()
-                                .filter(v -> v.getSize().equals(item.getSelectedSize()))
-                                .findFirst()
-                                .ifPresent(variant -> {
-                                    int newStock = Math.max(0, variant.getStock() - item.getQuantity());
-                                    variant.setStock(newStock);
-                                    sizeVariantRepository.save(variant);
-                                });
-                    }
-                }
-
-                // Clear Cart
-                Optional<Cart> cartOpt = cartRepository.findByUserId(order.getUser().getId());
-                cartOpt.ifPresent(cart -> {
-                    cart.getItems().clear();
-                    cartRepository.save(cart);
-                });
-
-                return ResponseEntity.ok(Map.of("success", true, "message", "Order confirmed successfully"));
-            } else {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Invalid Razorpay signature"));
+        // Decrement stock for each ordered size variant
+        for (OrderItem item : order.getOrderItems()) {
+            if (item.getProductId() != null && item.getSelectedSize() != null) {
+                Long pid = Long.parseLong(item.getProductId());
+                sizeVariantRepository.findByProductId(pid).stream()
+                    .filter(v -> v.getSize().equals(item.getSelectedSize()))
+                    .findFirst()
+                    .ifPresent(variant -> {
+                        int newStock = Math.max(0, variant.getStock() - item.getQuantity());
+                        variant.setStock(newStock);
+                        sizeVariantRepository.save(variant);
+                    });
             }
-        } catch (RazorpayException e) {
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", "Error verifying payment"));
         }
+
+        // Clear cart
+        Optional<Cart> cartOpt = cartRepository.findByUserId(order.getUser().getId());
+        cartOpt.ifPresent(cart -> {
+            cart.getItems().clear();
+            cartRepository.save(cart);
+        });
+
+        // Record +5 preference scores for recommendation engine
+        for (OrderItem item : order.getOrderItems()) {
+            if (item.getProductId() != null) {
+                try {
+                    Long pid = Long.parseLong(item.getProductId());
+                    productRepository.findById(pid).ifPresent(product -> {
+                        if (product.getTags() != null && !product.getTags().isEmpty()) {
+                            userPreferenceService.recordInteraction(
+                                    order.getUser().getId(), product.getTags(), 5);
+                        }
+                    });
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "Order confirmed successfully",
+            "orderId", orderId
+        ));
     }
 
     @GetMapping("/list/{userId}")

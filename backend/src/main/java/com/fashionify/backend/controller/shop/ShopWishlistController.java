@@ -4,6 +4,7 @@ import com.fashionify.backend.entity.Product;
 import com.fashionify.backend.entity.Wishlist;
 import com.fashionify.backend.repository.ProductRepository;
 import com.fashionify.backend.repository.WishlistRepository;
+import com.fashionify.backend.service.UserPreferenceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,9 @@ public class ShopWishlistController {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private UserPreferenceService userPreferenceService;
+
     @PostMapping("/add")
     public ResponseEntity<?> addToWishlist(@RequestBody Map<String, Long> payload) {
         Long userId = payload.get("userId");
@@ -44,6 +48,13 @@ public class ShopWishlistController {
         wishlist.setUserId(userId);
         wishlist.setProductId(productId);
         wishlistRepository.save(wishlist);
+
+        // Record +3 preference score for recommendation engine
+        productRepository.findById(productId).ifPresent(product -> {
+            if (product.getTags() != null && !product.getTags().isEmpty()) {
+                userPreferenceService.recordInteraction(userId, product.getTags(), 3);
+            }
+        });
 
         List<Product> products = fetchWishlistProducts(userId);
         response.put("success", true);
