@@ -10,6 +10,7 @@ import {
 import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
+import BrandLogo from "@/components/common/BrandLogo";
 
 const adminSidebarMenuItems = [
   {
@@ -83,9 +84,8 @@ function AdminSideBar({ open, setOpen }) {
         <SheetContent side="left" className="w-64">
           <div className="flex flex-col h-full">
             <SheetHeader className="border-b">
-              <SheetTitle className="flex gap-2 mt-5 mb-5">
-                <ChartNoAxesCombined size={30} />
-                <h1 className="text-2xl font-extrabold">Admin Panel</h1>
+              <SheetTitle className="flex mt-5 mb-5 items-center justify-center">
+                <BrandLogo showText={true} />
               </SheetTitle>
             </SheetHeader>
             <MenuItems setOpen={setOpen} />
@@ -95,12 +95,9 @@ function AdminSideBar({ open, setOpen }) {
       <aside className="hidden w-[280px] flex-col border-r border-border bg-card py-8 lg:flex">
         <div
           onClick={() => navigate("/admin/dashboard")}
-          className="flex cursor-pointer items-center gap-3 px-8 mb-6"
+          className="flex cursor-pointer items-center justify-center mb-6"
         >
-          <div className="p-2 rounded-md bg-primary text-primary-foreground">
-             <ChartNoAxesCombined size={24} />
-          </div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Fashionify</h1>
+          <BrandLogo showText={true} />
         </div>
         <MenuItems />
       </aside>

@@ -174,7 +174,7 @@ function ShoppingProductDetails() {
 
     setIsWaitlisting(true);
     try {
-      const response = await axios.post("http://localhost:8080/api/waitlist", {
+      const response = await axios.post(import.meta.env.VITE_API_URL + "/api/waitlist", {
         email: user?.email,
         productId: productDetails?.id,
         size: selectedSize || "One Size"

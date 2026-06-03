@@ -12,7 +12,7 @@ export const registerUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/auth/register",
+        import.meta.env.VITE_API_URL + "/api/auth/register",
         formData,
         {
           withCredentials: true,
@@ -30,7 +30,7 @@ export const loginUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
+        import.meta.env.VITE_API_URL + "/api/auth/login",
         formData,
         {
           withCredentials: true,
@@ -48,7 +48,7 @@ export const adminLoginUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/admin-auth/login",
+        import.meta.env.VITE_API_URL + "/api/admin-auth/login",
         formData,
         { withCredentials: true }
       );
@@ -64,7 +64,7 @@ export const logoutUser = createAsyncThunk(
 
   async () => {
     const response = await axios.post(
-      "http://localhost:8080/api/auth/logout",
+      import.meta.env.VITE_API_URL + "/api/auth/logout",
       {},
       {
         withCredentials: true,
@@ -80,7 +80,7 @@ export const checkAuth = createAsyncThunk(
 
   async () => {
     const response = await axios.get(
-      "http://localhost:8080/api/auth/check-auth",
+      import.meta.env.VITE_API_URL + "/api/auth/check-auth",
       {
         withCredentials: true,
         headers: {
@@ -99,7 +99,7 @@ export const updatePreferences = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        "http://localhost:8080/api/auth/update-preferences",
+        import.meta.env.VITE_API_URL + "/api/auth/update-preferences",
         formData,
         { withCredentials: true }
       );
@@ -115,7 +115,7 @@ export const updatePassword = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        "http://localhost:8080/api/auth/update-password",
+        import.meta.env.VITE_API_URL + "/api/auth/update-password",
         formData,
         { withCredentials: true }
       );
@@ -131,7 +131,7 @@ export const updateProfile = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        "http://localhost:8080/api/auth/update-profile",
+        import.meta.env.VITE_API_URL + "/api/auth/update-profile",
         formData,
         { withCredentials: true }
       );
@@ -147,7 +147,7 @@ export const deleteAccount = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.delete(
-        "http://localhost:8080/api/auth/delete-account",
+        import.meta.env.VITE_API_URL + "/api/auth/delete-account",
         { withCredentials: true }
       );
       return response.data;
@@ -161,7 +161,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUser: (state, action) => {},
+
     setAvatar: (state, action) => {
       if (state.user) {
         state.user.avatar = action.payload;
@@ -246,5 +246,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setAvatar } = authSlice.actions;
+export const { setAvatar } = authSlice.actions;
 export default authSlice.reducer;

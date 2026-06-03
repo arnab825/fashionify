@@ -3,6 +3,7 @@ package com.fashionify.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -21,14 +22,34 @@ public class Coupon {
     @Column(nullable = false, unique = true)
     private String code;
 
-    @Column(nullable = false)
-    private Double discountPercentage;
+    private String description;
 
+    @Column(nullable = false)
+    private String type; // PERCENTAGE, FIXED, FREE_SHIPPING
+
+    @Column(nullable = false)
+    private Double value; // Replaces discountPercentage
+
+    private Double minimumOrderAmount;
+
+    private LocalDateTime startDate;
     private LocalDateTime expiryDate;
 
+    private Integer maxRedemptions;
+    private Integer perUserLimit;
+    
+    @Builder.Default
+    private Integer totalRedemptions = 0;
+
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
+
+    private LocalDateTime deletedAt;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

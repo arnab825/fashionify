@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/shop/wishlist")
-@CrossOrigin(origins = "http://localhost:5173/")
 public class ShopWishlistController {
 
     @Autowired

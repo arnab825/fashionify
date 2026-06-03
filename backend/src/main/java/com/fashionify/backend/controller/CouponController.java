@@ -21,7 +21,7 @@ public class CouponController {
     @GetMapping
     public ResponseEntity<?> getAllCoupons() {
         try {
-            List<Coupon> coupons = couponRepository.findAll();
+            List<Coupon> coupons = couponRepository.findAllByDeletedAtIsNull();
             return ResponseEntity.ok(Map.of("success", true, "data", coupons));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -39,10 +39,41 @@ public class CouponController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCoupon(@PathVariable Long id, @RequestBody Coupon couponDetails) {
+        try {
+            Optional<Coupon> opt = couponRepository.findById(id);
+            if (opt.isEmpty() || opt.get().getDeletedAt() != null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Coupon not found"));
+            }
+            Coupon coupon = opt.get();
+            coupon.setCode(couponDetails.getCode().toUpperCase());
+            coupon.setDescription(couponDetails.getDescription());
+            coupon.setType(couponDetails.getType());
+            coupon.setValue(couponDetails.getValue());
+            coupon.setMinimumOrderAmount(couponDetails.getMinimumOrderAmount());
+            coupon.setStartDate(couponDetails.getStartDate());
+            coupon.setExpiryDate(couponDetails.getExpiryDate());
+            coupon.setMaxRedemptions(couponDetails.getMaxRedemptions());
+            coupon.setPerUserLimit(couponDetails.getPerUserLimit());
+            coupon.setIsActive(couponDetails.getIsActive());
+
+            Coupon updated = couponRepository.save(coupon);
+            return ResponseEntity.ok(Map.of("success", true, "data", updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCoupon(@PathVariable Long id) {
         try {
-            couponRepository.deleteById(id);
+            Optional<Coupon> opt = couponRepository.findById(id);
+            if (opt.isPresent()) {
+                Coupon coupon = opt.get();
+                coupon.setDeletedAt(LocalDateTime.now());
+                couponRepository.save(coupon);
+            }
             return ResponseEntity.ok(Map.of("success", true, "message", "Coupon deleted"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
@@ -52,7 +83,7 @@ public class CouponController {
     @GetMapping("/validate/{code}")
     public ResponseEntity<?> validateCoupon(@PathVariable String code) {
         try {
-            Optional<Coupon> opt = couponRepository.findByCode(code.toUpperCase());
+            Optional<Coupon> opt = couponRepository.findByCodeAndDeletedAtIsNull(code.toUpperCase());
             if (opt.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Invalid coupon code"));
             }
@@ -60,8 +91,14 @@ public class CouponController {
             if (!coupon.getIsActive()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Coupon is inactive"));
             }
+            if (coupon.getStartDate() != null && coupon.getStartDate().isAfter(LocalDateTime.now())) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Coupon is not active yet"));
+            }
             if (coupon.getExpiryDate() != null && coupon.getExpiryDate().isBefore(LocalDateTime.now())) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Coupon has expired"));
+            }
+            if (coupon.getMaxRedemptions() != null && coupon.getTotalRedemptions() >= coupon.getMaxRedemptions()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Coupon redemption limit reached"));
             }
 
             return ResponseEntity.ok(Map.of("success", true, "data", coupon));

@@ -10,7 +10,7 @@ export const getAllUsersForAdmin = createAsyncThunk(
   "/users/getAllUsersForAdmin",
   async () => {
     const response = await axios.get(
-      `http://localhost:8080/api/admin/users/get`,
+      `${import.meta.env.VITE_API_URL}/api/admin/users/get`,
       { withCredentials: true }
     );
     return response.data;
@@ -21,7 +21,7 @@ export const updateUserRole = createAsyncThunk(
   "/users/updateUserRole",
   async ({ id, role }) => {
     const response = await axios.put(
-      `http://localhost:8080/api/admin/users/update-role/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/admin/users/update-role/${id}`,
       { role },
       { withCredentials: true }
     );
@@ -33,7 +33,7 @@ export const deleteUser = createAsyncThunk(
   "/users/deleteUser",
   async (id) => {
     const response = await axios.delete(
-      `http://localhost:8080/api/admin/users/delete/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/admin/users/delete/${id}`,
       { withCredentials: true }
     );
     return response.data;

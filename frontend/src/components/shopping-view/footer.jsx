@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { HousePlug, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import BrandLogo from "@/components/common/BrandLogo";
 
 function ShoppingFooter() {
   return (
@@ -11,17 +12,9 @@ function ShoppingFooter() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/shop/home" className="flex items-center gap-2 group">
-              <div
-                className="p-1.5 bg-primary text-primary-foreground border-2 border-border"
-                style={{ boxShadow: "2px 2px 0px 0px hsl(var(--neu-black))" }}
-              >
-                <HousePlug className="h-5 w-5" />
-              </div>
-              <span className="font-display font-black text-xl tracking-tight">
-                Fashion<span className="text-primary">ify</span>
-              </span>
-            </Link>
+            <div className="group">
+              <BrandLogo showText={true} textClassName="text-xl" />
+            </div>
             <p className="text-sm text-muted-foreground font-body leading-relaxed">
               Your one-stop destination for premium fashion and accessories. Dress better, feel better.
             </p>

@@ -10,7 +10,7 @@ export const addToWishlist = createAsyncThunk(
   "wishlist/addToWishlist",
   async ({ userId, productId }) => {
     const response = await axios.post(
-      "http://localhost:8080/api/shop/wishlist/add",
+      import.meta.env.VITE_API_URL + "/api/shop/wishlist/add",
       { userId, productId }
     );
     return response.data;
@@ -21,7 +21,7 @@ export const fetchWishlistItems = createAsyncThunk(
   "wishlist/fetchWishlistItems",
   async (userId) => {
     const response = await axios.get(
-      `http://localhost:8080/api/shop/wishlist/get/${userId}`
+      `${import.meta.env.VITE_API_URL}/api/shop/wishlist/get/${userId}`
     );
     return response.data;
   }
@@ -31,7 +31,7 @@ export const removeFromWishlist = createAsyncThunk(
   "wishlist/removeFromWishlist",
   async ({ userId, productId }) => {
     const response = await axios.delete(
-      `http://localhost:8080/api/shop/wishlist/delete/${userId}/${productId}`
+      `${import.meta.env.VITE_API_URL}/api/shop/wishlist/delete/${userId}/${productId}`
     );
     return response.data;
   }

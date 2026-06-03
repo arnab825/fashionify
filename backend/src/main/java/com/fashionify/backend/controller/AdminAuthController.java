@@ -24,7 +24,6 @@ import java.util.Map;
  * Mapped to /api/admin-auth/login so the frontend admin portal uses a
  * completely separate path from the customer login.
  */
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/admin-auth")
 public class AdminAuthController {

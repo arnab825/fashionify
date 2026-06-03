@@ -11,7 +11,7 @@ export const addReview = createAsyncThunk(
   "/order/addReview",
   async (formdata) => {
     const response = await axios.post(
-      `http://localhost:8080/api/shop/review/add`,
+      `${import.meta.env.VITE_API_URL}/api/shop/review/add`,
       formdata,
       { withCredentials: true }
     );
@@ -21,7 +21,7 @@ export const addReview = createAsyncThunk(
 
 export const getReviews = createAsyncThunk("/order/getReviews", async (id) => {
   const response = await axios.get(
-    `http://localhost:8080/api/shop/review/${id}`
+    `${import.meta.env.VITE_API_URL}/api/shop/review/${id}`
   );
   return response.data;
 });
@@ -30,7 +30,7 @@ export const checkRatingEligibility = createAsyncThunk(
   "/order/checkEligibility",
   async ({ productId, userId }) => {
     const response = await axios.get(
-      `http://localhost:8080/api/shop/review/eligibility/${productId}?userId=${userId}`,
+      `${import.meta.env.VITE_API_URL}/api/shop/review/eligibility/${productId}?userId=${userId}`,
       { withCredentials: true }
     );
     return response.data;

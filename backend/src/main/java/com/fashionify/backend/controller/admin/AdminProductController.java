@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/admin/products")
 public class AdminProductController {
@@ -80,6 +79,7 @@ public class AdminProductController {
     }
 
     // ── Edit Product ─────────────────────────────────────────────────────────
+    @SuppressWarnings("unchecked")
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> editProduct(@PathVariable Long id,
             @RequestBody Map<String, Object> payload) {

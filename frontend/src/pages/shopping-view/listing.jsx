@@ -59,33 +59,36 @@ function ShoppingListing() {
   }
 
   function handleFilter(getSectionId, getCurrentOption) {
-    let cpyFilters = { ...filters };
-    
-    // For non-array filters (price, size)
-    if (getSectionId === "minPrice" || getSectionId === "maxPrice" || getSectionId === "inStockSize") {
-      if (getCurrentOption) {
-        cpyFilters[getSectionId] = getCurrentOption;
-      } else {
-        delete cpyFilters[getSectionId];
-      }
-    } else {
-      const indexOfCurrentSection = Object.keys(cpyFilters).indexOf(getSectionId);
-
-      if (indexOfCurrentSection === -1) {
-        cpyFilters = { ...cpyFilters, [getSectionId]: [getCurrentOption] };
-      } else {
-        const indexOfCurrentOption = cpyFilters[getSectionId].indexOf(getCurrentOption);
-        if (indexOfCurrentOption === -1) cpyFilters[getSectionId].push(getCurrentOption);
-        else cpyFilters[getSectionId].splice(indexOfCurrentOption, 1);
-        if (cpyFilters[getSectionId].length === 0) {
+    setFilters((prevFilters) => {
+      let cpyFilters = { ...prevFilters };
+      
+      // For non-array filters (price, size)
+      if (getSectionId === "minPrice" || getSectionId === "maxPrice" || getSectionId === "inStockSize") {
+        if (getCurrentOption !== null && getCurrentOption !== undefined && getCurrentOption !== "") {
+          cpyFilters[getSectionId] = getCurrentOption;
+        } else {
           delete cpyFilters[getSectionId];
         }
-      }
-    }
+      } else {
+        const indexOfCurrentSection = Object.keys(cpyFilters).indexOf(getSectionId);
 
-    setFilters(cpyFilters);
+        if (indexOfCurrentSection === -1) {
+          cpyFilters = { ...cpyFilters, [getSectionId]: [getCurrentOption] };
+        } else {
+          const indexOfCurrentOption = cpyFilters[getSectionId].indexOf(getCurrentOption);
+          if (indexOfCurrentOption === -1) cpyFilters[getSectionId].push(getCurrentOption);
+          else cpyFilters[getSectionId].splice(indexOfCurrentOption, 1);
+          if (cpyFilters[getSectionId].length === 0) {
+            delete cpyFilters[getSectionId];
+          }
+        }
+      }
+
+      sessionStorage.setItem("filters", JSON.stringify(cpyFilters));
+      return cpyFilters;
+    });
+    
     setPage(0); // Reset to first page on filter change
-    sessionStorage.setItem("filters", JSON.stringify(cpyFilters));
   }
 
   function handlePageChange(newPage) {

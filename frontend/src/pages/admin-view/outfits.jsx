@@ -19,7 +19,7 @@ function AdminOutfits() {
 
   const fetchOutfits = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/outfits");
+      const res = await axios.get(import.meta.env.VITE_API_URL + "/api/outfits");
       if (res.data.success) {
         setOutfits(res.data.data);
       }
@@ -30,7 +30,7 @@ function AdminOutfits() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/admin/products/get");
+      const res = await axios.get(import.meta.env.VITE_API_URL + "/api/admin/products/get");
       if (res.data.success) {
         setProducts(res.data.data);
       }
@@ -61,7 +61,7 @@ function AdminOutfits() {
     
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:8080/api/outfits", {
+      const res = await axios.post(import.meta.env.VITE_API_URL + "/api/outfits", {
         name,
         description,
         imageUrl,
@@ -84,7 +84,7 @@ function AdminOutfits() {
 
   const handleDeleteOutfit = async (id) => {
     try {
-      const res = await axios.delete(`http://localhost:8080/api/outfits/${id}`);
+      const res = await axios.delete(`${import.meta.env.VITE_API_URL}/api/outfits/${id}`);
       if (res.data.success) {
         toast({ title: "Outfit deleted" });
         fetchOutfits();

@@ -12,7 +12,7 @@ export const createNewOrder = createAsyncThunk(
   "/order/createNewOrder",
   async (orderData) => {
     const response = await axios.post(
-      "http://localhost:8080/api/shop/order/create",
+      import.meta.env.VITE_API_URL + "/api/shop/order/create",
       orderData,
       { withCredentials: true }
     );
@@ -24,7 +24,7 @@ export const confirmSimulatedOrder = createAsyncThunk(
   "/order/confirmSimulatedOrder",
   async (orderId) => {
     const response = await axios.post(
-      "http://localhost:8080/api/shop/order/confirm-simulated",
+      import.meta.env.VITE_API_URL + "/api/shop/order/confirm-simulated",
       { orderId },
       { withCredentials: true }
     );
@@ -36,7 +36,7 @@ export const getAllOrdersByUserId = createAsyncThunk(
   "/order/getAllOrdersByUserId",
   async (userId) => {
     const response = await axios.get(
-      `http://localhost:8080/api/shop/order/list/${userId}`,
+      `${import.meta.env.VITE_API_URL}/api/shop/order/list/${userId}`,
       { withCredentials: true }
     );
     return response.data;
@@ -47,7 +47,7 @@ export const getOrderDetails = createAsyncThunk(
   "/order/getOrderDetails",
   async (id) => {
     const response = await axios.get(
-      `http://localhost:8080/api/shop/order/details/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/shop/order/details/${id}`,
       { withCredentials: true }
     );
     return response.data;

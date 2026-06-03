@@ -60,15 +60,34 @@ CREATE DATABASE fashionify;
 ```
 
 ### 2. Backend Setup
-Navigate to the backend directory and configure your environment variables:
+Open a terminal window and navigate to the backend directory:
 ```bash
 cd backend
 ```
-Ensure you have the correct variables in your `.env` file (or `application.properties`), such as:
-- `spring.datasource.url`
-- `spring.datasource.username` / `password`
-- `cloudinary.cloud-name`, `api-key`, `api-secret`
-- `jwt.secret`
+Create a `.env` file in the `backend` directory and add the following required variables (you can use `.env.example` as a template):
+
+```env
+# Database Credentials
+DB_USER=your_mysql_username
+DB_PASSWORD=your_mysql_password
+
+# JWT Authentication
+JWT_SECRET=your_random_secret_string_minimum_256_bits_length
+JWT_EXPIRATION_MS=86400000
+
+# Admin Credentials
+ADMIN_EMAIL=admin@gmail.com
+ADMIN_PASSWORD=demo
+
+# Cloudinary Config
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+# Razorpay Config (Use Test Mode Keys)
+RAZORPAY_KEY_ID=rzp_test_yourkeyid
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+```
 
 Start the Spring Boot server using the bundled Maven Wrapper (no global Maven installation required):
 ```bash
@@ -81,16 +100,23 @@ Start the Spring Boot server using the bundled Maven Wrapper (no global Maven in
 *Note: The backend runs on `http://localhost:8080` by default.*
 
 ### 3. Frontend Setup
-Navigate to the frontend directory:
+Open a **second, separate terminal window** and navigate to the frontend directory:
 ```bash
 cd frontend
 ```
+Create a `.env` file in the `frontend` directory and define the backend API URL:
+
+```env
+VITE_API_URL=http://localhost:8080
+```
+
 Install dependencies and start the development server:
 ```bash
 npm install
 npm run dev
 ```
-*Note: The frontend runs on `http://localhost:5173` by default.*
+*Note: The frontend runs on `http://localhost:5173` by default. Once both servers are running concurrently, you can interact with the full application!*
+
 
 ## 🔐 Default Admin Credentials
 When the backend initializes the database, it automatically creates a default admin account for you:

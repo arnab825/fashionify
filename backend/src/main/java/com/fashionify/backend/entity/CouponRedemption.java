@@ -7,30 +7,28 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "waitlists")
+@Table(name = "coupon_redemptions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Waitlist {
+public class CouponRedemption {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String email;
+    private Long couponId;
 
     @Column(nullable = false)
-    private Long productId;
+    private Long userId;
 
     @Column(nullable = false)
-    private String size;
+    private Long orderId;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean isNotified = false;
+    private Double discountAmount;
 
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private LocalDateTime redeemedAt;
 }

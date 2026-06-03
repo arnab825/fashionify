@@ -37,22 +37,5 @@ function ProductCardSkeleton() {
   );
 }
 
-/**
- * Skeleton loader grid for admin KPI cards.
- */
-export function StatCardSkeleton() {
-  return (
-    <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <div className="flex justify-between items-center">
-          <Skeleton height={14} width={100} />
-          <Skeleton height={32} width={32} borderRadius={8} />
-        </div>
-        <Skeleton height={28} width={80} />
-        <Skeleton height={12} width={120} />
-      </div>
-    </SkeletonTheme>
-  );
-}
 
 export default ProductCardSkeleton;

@@ -71,7 +71,7 @@ function ShoppingHome() {
   useEffect(() => {
     const fetchOutfits = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/outfits");
+        const res = await axios.get(import.meta.env.VITE_API_URL + "/api/outfits");
         if (res.data.success) {
           setOutfits(res.data.data);
         }
@@ -265,26 +265,6 @@ function ShoppingHome() {
         </Button>
       </div>
 
-      {/* Promotional Banner */}
-      <section className="py-8 border-b border-border bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="rounded-2xl bg-card border border-border shadow-sm flex flex-col sm:flex-row items-center sm:items-start sm:justify-between gap-6 p-6 sm:p-8">
-            <div className="flex items-center gap-4 sm:gap-6">
-              <div className="w-16 h-16 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-2xl shadow-sm">
-                %
-              </div>
-              <div>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-1 tracking-tight">Get Extra <span className="text-primary">10% Savings*</span></h3>
-                <p className="text-muted-foreground font-medium">With Fashionify Platinum & Partner Bank Cards</p>
-              </div>
-            </div>
-            <Button className="shrink-0 bg-foreground text-background hover:bg-foreground/90 rounded-xl px-8 h-12 font-bold shadow-sm">
-              Claim Offer
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Shop Smart, Save Bigger */}
       <section className="py-16">
         <div className="container mx-auto px-4">
@@ -335,10 +315,10 @@ function ShoppingHome() {
               {outfits.map((outfit) => (
                 <div key={outfit.id} className="bg-card rounded-2xl border shadow-sm overflow-hidden flex flex-col group">
                   <div className="h-80 relative overflow-hidden bg-muted">
-                    <img 
-                      src={outfit.imageUrl} 
-                      alt={outfit.name} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                    <img
+                      src={outfit.imageUrl}
+                      alt={outfit.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
@@ -349,18 +329,18 @@ function ShoppingHome() {
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Included in this look</p>
                       <div className="flex -space-x-3 overflow-hidden p-1">
                         {outfit.products?.map((p, i) => (
-                          <img 
-                            key={p.id} 
-                            src={p.image || p.images?.[0]} 
-                            alt={p.title} 
+                          <img
+                            key={p.id}
+                            src={p.image || p.images?.[0]}
+                            alt={p.title}
                             title={p.title}
-                            className={`inline-block h-12 w-12 rounded-full ring-2 ring-background object-cover`} 
+                            className={`inline-block h-12 w-12 rounded-full ring-2 ring-background object-cover`}
                             style={{ zIndex: 10 - i }}
                           />
                         ))}
                       </div>
                     </div>
-                    <Button 
+                    <Button
                       onClick={() => handleAddOutfitToCart(outfit)}
                       disabled={addingToCart}
                       className="w-full bg-foreground text-background hover:bg-foreground/90 font-bold h-12 mt-auto rounded-xl shadow-md"

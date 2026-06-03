@@ -1,10 +1,54 @@
 import { filterOptions } from "@/config";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { Separator } from "../ui/separator";
+import PriceRangeSlider from "./PriceRangeSlider";
+import axios from "axios";
 
 function ProductFilter({ filters, handleFilter }) {
+  const [priceBounds, setPriceBounds] = useState({ min: 0, max: 1000 });
+  const [sliderValue, setSliderValue] = useState([0, 1000]);
+
+  useEffect(() => {
+    async function fetchPriceRange() {
+      try {
+        const res = await axios.get(import.meta.env.VITE_API_URL + "/api/shop/products/price-range");
+        if (res.data.success) {
+          const { minPrice, maxPrice } = res.data.data;
+          // Ensure min is less than max for the slider to work
+          const adjustedMax = maxPrice > minPrice ? maxPrice : minPrice + 100;
+          setPriceBounds({ min: minPrice, max: adjustedMax });
+          
+          const currentMin = filters?.minPrice !== undefined ? Number(filters.minPrice) : minPrice;
+          const currentMax = filters?.maxPrice !== undefined ? Number(filters.maxPrice) : adjustedMax;
+          setSliderValue([currentMin, currentMax]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch price range", err);
+      }
+    }
+    fetchPriceRange();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const currentMin = filters?.minPrice !== undefined ? Number(filters.minPrice) : priceBounds.min;
+    const currentMax = filters?.maxPrice !== undefined ? Number(filters.maxPrice) : priceBounds.max;
+    if (sliderValue[0] !== currentMin || sliderValue[1] !== currentMax) {
+      setSliderValue([currentMin, currentMax]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, priceBounds]);
+
+  const handleSliderChange = (newValues) => {
+    setSliderValue(newValues);
+    // Since there are two values, updating one after another might cause a race condition in handleFilter 
+    // depending on how it's implemented. We will call it sequentially if listing.jsx supports it,
+    // or just call handleFilter twice.
+    handleFilter("minPrice", newValues[0]);
+    handleFilter("maxPrice", newValues[1]);
+  };
   return (
     <div className="bg-background rounded-lg shadow-sm">
       <div className="p-4 border-b">
@@ -39,25 +83,14 @@ function ProductFilter({ filters, handleFilter }) {
         ))}
 
         {/* Price Range */}
-        <div>
+        <div className="pb-4">
           <h3 className="text-base font-bold mb-3">Price Range</h3>
-          <div className="flex items-center gap-2">
-            <input 
-              type="number" 
-              placeholder="Min ₹" 
-              className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={filters?.minPrice || ""}
-              onChange={(e) => handleFilter("minPrice", e.target.value)}
-            />
-            <span className="text-muted-foreground">-</span>
-            <input 
-              type="number" 
-              placeholder="Max ₹" 
-              className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={filters?.maxPrice || ""}
-              onChange={(e) => handleFilter("maxPrice", e.target.value)}
-            />
-          </div>
+          <PriceRangeSlider 
+            min={priceBounds.min} 
+            max={priceBounds.max} 
+            value={sliderValue} 
+            onChange={handleSliderChange} 
+          />
         </div>
         <Separator />
 

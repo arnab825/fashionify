@@ -4,25 +4,19 @@ import com.fashionify.backend.entity.Product;
 import com.fashionify.backend.entity.ProductSizeVariant;
 import com.fashionify.backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/shop/products")
 public class ShopProductController {
 
     @Autowired
     private ProductRepository productRepository;
-
-    private static final int DEFAULT_PAGE_SIZE = 8;
 
     /**
      * GET /api/shop/products/get
@@ -118,17 +112,25 @@ public class ShopProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
-    private Sort buildSort(String sortBy) {
-        switch (sortBy) {
-            case "price-lowtohigh":  return Sort.by(Sort.Direction.ASC, "price");
-            case "price-hightolow":  return Sort.by(Sort.Direction.DESC, "price");
-            case "title-atoz":       return Sort.by(Sort.Direction.ASC, "title");
-            case "title-ztoa":       return Sort.by(Sort.Direction.DESC, "title");
-            default:                 return Sort.by(Sort.Direction.ASC, "price");
-        }
+    @GetMapping("/price-range")
+    public ResponseEntity<?> getPriceRange() {
+        List<Product> products = productRepository.findAll();
+        double minPrice = products.stream()
+                .mapToDouble(p -> p.getSalePrice() != null && p.getSalePrice() > 0 ? p.getSalePrice() : p.getPrice())
+                .min()
+                .orElse(0.0);
+        double maxPrice = products.stream()
+                .mapToDouble(p -> p.getSalePrice() != null && p.getSalePrice() > 0 ? p.getSalePrice() : p.getPrice())
+                .max()
+                .orElse(1000.0);
+                
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "data", Map.of("minPrice", minPrice, "maxPrice", maxPrice)
+        ));
     }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
     public Map<String, Object> enrichProduct(Product product) {
         Map<String, Object> map = new LinkedHashMap<>();

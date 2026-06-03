@@ -27,6 +27,7 @@ import { Input } from "../ui/input";
 import { useTheme } from "@/components/theme-provider";
 import { resetSearchResults } from "@/store/shop/search-slice";
 import { useAuthModal } from "@/context/AuthModalContext";
+import BrandLogo from "@/components/common/BrandLogo";
 
 function SearchBar({ isMobile }) {
   const [keyword, setKeyword] = useState("");
@@ -323,17 +324,9 @@ function ShoppingHeader() {
         {/* Main Header Row */}
         <div className="flex h-[68px] md:h-[76px] items-center justify-between px-4 md:px-8 w-full max-w-7xl mx-auto lg:max-w-none lg:px-12">
           {/* Logo */}
-          <Link to="/shop/home" className="flex items-center gap-3 shrink-0 group lg:mr-10">
-            <div
-              className="p-1.5 bg-primary text-primary-foreground border-2 border-border transition-transform group-hover:-translate-y-0.5"
-              style={{ boxShadow: "3px 3px 0px 0px hsl(var(--neu-black))" }}
-            >
-              <HousePlug className="h-6 w-6" />
-            </div>
-            <span className="font-display font-black text-2xl tracking-tight text-foreground hidden sm:block">
-              Fashion<span className="text-primary">ify</span>
-            </span>
-          </Link>
+          <div className="shrink-0 group lg:mr-10">
+            <BrandLogo textClassName="text-2xl hidden sm:block" />
+          </div>
 
           {/* Navigation */}
           <div className="hidden lg:flex h-full items-center justify-start flex-none">

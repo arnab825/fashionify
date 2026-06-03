@@ -9,7 +9,11 @@ import com.fashionify.backend.repository.OrderRepository;
 import com.fashionify.backend.repository.ProductSizeVariantRepository;
 import com.fashionify.backend.repository.UserRepository;
 import com.fashionify.backend.repository.CouponRepository;
+import com.fashionify.backend.repository.CouponRedemptionRepository;
+import com.fashionify.backend.repository.UserCouponUsageRepository;
 import com.fashionify.backend.entity.Coupon;
+import com.fashionify.backend.entity.CouponRedemption;
+import com.fashionify.backend.entity.UserCouponUsage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/shop/order")
 public class ShopOrderController {
@@ -39,6 +42,12 @@ public class ShopOrderController {
 
     @Autowired
     private CouponRepository couponRepository;
+
+    @Autowired
+    private CouponRedemptionRepository couponRedemptionRepository;
+
+    @Autowired
+    private UserCouponUsageRepository userCouponUsageRepository;
 
 
     /**
@@ -169,6 +178,35 @@ public class ShopOrderController {
             cartRepository.save(cart);
         });
 
+        // Record coupon usage if any
+        if (order.getAppliedPromoCode() != null && !order.getAppliedPromoCode().isEmpty()) {
+            couponRepository.findByCodeAndDeletedAtIsNull(order.getAppliedPromoCode()).ifPresent(coupon -> {
+                // Increment total redemptions
+                coupon.setTotalRedemptions(coupon.getTotalRedemptions() + 1);
+                couponRepository.save(coupon);
+
+                // Record redemption
+                CouponRedemption redemption = new CouponRedemption();
+                redemption.setCouponId(coupon.getId());
+                redemption.setUserId(order.getUser().getId());
+                redemption.setOrderId(order.getId());
+                redemption.setDiscountAmount(order.getDiscountAmount());
+                couponRedemptionRepository.save(redemption);
+
+                // Update user usage
+                UserCouponUsage usage = userCouponUsageRepository.findByUserIdAndCouponId(order.getUser().getId(), coupon.getId())
+                        .orElseGet(() -> {
+                            UserCouponUsage newUsage = new UserCouponUsage();
+                            newUsage.setUserId(order.getUser().getId());
+                            newUsage.setCouponId(coupon.getId());
+                            newUsage.setUsageCount(0);
+                            return newUsage;
+                        });
+                usage.setUsageCount(usage.getUsageCount() + 1);
+                userCouponUsageRepository.save(usage);
+            });
+        }
+
         return ResponseEntity.ok(Map.of(
             "success", true,
             "message", "Order confirmed successfully",
@@ -192,11 +230,14 @@ public class ShopOrderController {
     }
 
     @PostMapping("/apply-promo")
-    public ResponseEntity<?> applyPromoCode(@RequestBody Map<String, String> payload) {
-        String code = payload.get("promoCode");
+    public ResponseEntity<?> applyPromoCode(@RequestBody Map<String, Object> payload) {
+        String code = (String) payload.get("promoCode");
+        Long userId = payload.get("userId") != null ? Long.valueOf(payload.get("userId").toString()) : null;
+        Double cartTotal = payload.get("cartTotal") != null ? Double.valueOf(payload.get("cartTotal").toString()) : 0.0;
+
         if (code == null) return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Promo code missing"));
         
-        Optional<Coupon> opt = couponRepository.findByCode(code.toUpperCase());
+        Optional<Coupon> opt = couponRepository.findByCodeAndDeletedAtIsNull(code.toUpperCase());
         if (opt.isEmpty()) {
             return ResponseEntity.ok(Map.of("success", false, "message", "Invalid promo code"));
         }
@@ -204,15 +245,30 @@ public class ShopOrderController {
         if (!coupon.getIsActive()) {
             return ResponseEntity.ok(Map.of("success", false, "message", "Promo code is inactive"));
         }
+        if (coupon.getStartDate() != null && coupon.getStartDate().isAfter(LocalDateTime.now())) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "Promo code is not active yet"));
+        }
         if (coupon.getExpiryDate() != null && coupon.getExpiryDate().isBefore(LocalDateTime.now())) {
             return ResponseEntity.ok(Map.of("success", false, "message", "Promo code has expired"));
+        }
+        if (coupon.getMinimumOrderAmount() != null && cartTotal < coupon.getMinimumOrderAmount()) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "Minimum order amount of ₹" + coupon.getMinimumOrderAmount() + " required"));
+        }
+        if (coupon.getMaxRedemptions() != null && coupon.getTotalRedemptions() >= coupon.getMaxRedemptions()) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "Promo code redemption limit reached"));
+        }
+        if (userId != null && coupon.getPerUserLimit() != null) {
+            Optional<UserCouponUsage> usageOpt = userCouponUsageRepository.findByUserIdAndCouponId(userId, coupon.getId());
+            if (usageOpt.isPresent() && usageOpt.get().getUsageCount() >= coupon.getPerUserLimit()) {
+                return ResponseEntity.ok(Map.of("success", false, "message", "You have reached the maximum usage limit for this coupon"));
+            }
         }
         
         return ResponseEntity.ok(Map.of(
             "success", true,
-            "discountType", "PERCENTAGE",
-            "discountValue", coupon.getDiscountPercentage(),
-            "message", coupon.getDiscountPercentage() + "% discount applied!"
+            "discountType", coupon.getType(),
+            "discountValue", coupon.getValue(),
+            "message", "Promo code applied successfully!"
         ));
     }
 }

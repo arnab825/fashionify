@@ -45,8 +45,10 @@ function ShoppingCheckout() {
   const giftWrapCost = isGiftWrapped ? 50 : 0;
   const discountAmount = appliedPromo?.discountType === "PERCENTAGE" 
     ? (totalCartAmount * appliedPromo.discountValue / 100)
-    : appliedPromo?.discountType === "FLAT" 
+    : appliedPromo?.discountType === "FIXED" 
       ? appliedPromo.discountValue 
+      : appliedPromo?.discountType === "FREE_SHIPPING"
+      ? shippingCost
       : 0;
   const finalTotalAmount = Math.max(0, totalCartAmount + shippingCost + giftWrapCost - discountAmount);
 
@@ -55,7 +57,11 @@ function ShoppingCheckout() {
     setIsApplyingPromo(true);
     setPromoMessage({ text: "", isError: false });
     try {
-      const response = await axios.post("http://localhost:8080/api/shop/order/apply-promo", { promoCode });
+      const response = await axios.post(import.meta.env.VITE_API_URL + "/api/shop/order/apply-promo", { 
+        promoCode,
+        userId: user?.id,
+        cartTotal: totalCartAmount
+      });
       if (response.data.success) {
         setAppliedPromo({
           code: promoCode,
