@@ -54,6 +54,10 @@ public class AdminProductController {
     // ── Add Product ──────────────────────────────────────────────────────────
     @PostMapping("/add")
     public ResponseEntity<?> addProduct(@RequestBody Map<String, Object> payload) {
+        // Validate tags before persisting — minimum 1, maximum 5
+        ResponseEntity<?> tagError = validateTagsInPayload(payload);
+        if (tagError != null) return tagError;
+
         Product product = buildProductFromPayload(payload, new Product());
         Product saved = productRepository.save(product);
         saveVariants(saved, payload);
@@ -83,6 +87,10 @@ public class AdminProductController {
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> editProduct(@PathVariable Long id,
             @RequestBody Map<String, Object> payload) {
+        // Validate tags before persisting — minimum 1, maximum 5
+        ResponseEntity<?> tagError = validateTagsInPayload(payload);
+        if (tagError != null) return tagError;
+
         Optional<Product> opt = productRepository.findById(id);
         if (opt.isEmpty())
             return ResponseEntity.notFound().build();
@@ -207,6 +215,33 @@ public class AdminProductController {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Validates that the request payload contains 1–5 non-blank tags.
+     * Returns a 400 ResponseEntity if invalid, null if valid.
+     * Centralised here so add and edit share identical rules.
+     */
+    @SuppressWarnings("unchecked")
+    private ResponseEntity<?> validateTagsInPayload(Map<String, Object> payload) {
+        // Tags key must be present
+        if (!payload.containsKey("tags")) {
+            return ResponseEntity.badRequest().body(
+                Map.of("success", false, "message", "Tags are required. Please add 1 to 5 tags."));
+        }
+        List<String> rawTags = (List<String>) payload.get("tags");
+        long validCount = rawTags == null ? 0 :
+                rawTags.stream().filter(t -> t != null && !t.isBlank()).distinct().count();
+        if (validCount < 1) {
+            return ResponseEntity.badRequest().body(
+                Map.of("success", false, "message", "At least 1 tag is required."));
+        }
+        if (validCount > 5) {
+            return ResponseEntity.badRequest().body(
+                Map.of("success", false, "message", "A maximum of 5 tags is allowed."));
+        }
+        return null; // valid
+    }
+
     @SuppressWarnings("unchecked")
     private Product buildProductFromPayload(Map<String, Object> payload, Product product) {
         if (payload.containsKey("title"))

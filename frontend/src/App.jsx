@@ -7,9 +7,9 @@ import AdminDashboard from "./pages/admin-view/dashboard";
 import AdminProducts from "./pages/admin-view/products";
 import AdminOrders from "./pages/admin-view/orders";
 import AdminFeatures from "./pages/admin-view/features";
-import AdminUsers from "./pages/admin-view/users";
 import AdminCoupons from "./pages/admin-view/coupons";
 import AdminOutfits from "./pages/admin-view/outfits";
+import AdminMessages from "./pages/admin-view/messages";
 import ShoppingLayout from "./components/shopping-view/layout";
 import NotFound from "./pages/not-found";
 import ShoppingHome from "./pages/shopping-view/home";
@@ -93,9 +93,9 @@ function App() {
           <Route path="products"  element={<AdminProducts />} />
           <Route path="orders"    element={<AdminOrders />} />
           <Route path="features"  element={<AdminFeatures />} />
-          <Route path="users"     element={<AdminUsers />} />
           <Route path="coupons"   element={<AdminCoupons />} />
           <Route path="outfits"   element={<AdminOutfits />} />
+          <Route path="messages"  element={<AdminMessages />} />
         </Route>
 
         {/* Shopping — public product pages, protected account/checkout */}

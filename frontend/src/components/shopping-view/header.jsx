@@ -19,7 +19,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { logoutUser } from "@/store/auth-slice";
-import UserCartWrapper from "./cart-wrapper";
+import CartDialog from "./cart-dialog";
 import { useEffect, useRef, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { fetchWishlistItems } from "@/store/shop/wishlist-slice";
@@ -286,31 +286,36 @@ function HeaderRightContent() {
         </span>
       </div>
 
-      {/* Cart */}
-      <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
-        <div
-          onClick={() => setOpenCartSheet(true)}
-          className="flex flex-col items-center justify-center cursor-pointer group relative pt-1 outline-none"
-        >
-          <div className="relative">
-            <ShoppingCart className="h-5 w-5 text-foreground/80 group-hover:text-primary transition-colors" />
-            <span className="absolute -top-1.5 -right-2 flex h-[15px] w-[15px] items-center justify-center rounded-none bg-primary text-[9px] font-black text-primary-foreground border border-border">
-              {cartItems?.items?.length || 0}
-            </span>
-          </div>
-          <span className="text-[10px] font-bold mt-0.5 text-foreground/70 group-hover:text-primary transition-colors hidden lg:block">
-            Cart
+      {/* Cart — now opens a centered Neubrutalist dialog, not a slide-over */}
+      <div
+        onClick={() => setOpenCartSheet(true)}
+        className="flex flex-col items-center justify-center cursor-pointer group relative pt-1 outline-none"
+        role="button"
+        aria-label="Open cart"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setOpenCartSheet(true); }}
+      >
+        <div className="relative">
+          <ShoppingCart className="h-5 w-5 text-foreground/80 group-hover:text-primary transition-colors" />
+          <span className="absolute -top-1.5 -right-2 flex h-[15px] w-[15px] items-center justify-center rounded-none bg-primary text-[9px] font-black text-primary-foreground border border-border">
+            {cartItems?.items?.length || 0}
           </span>
         </div>
-        <UserCartWrapper
-          setOpenCartSheet={setOpenCartSheet}
-          cartItems={
-            cartItems && cartItems.items && cartItems.items.length > 0
-              ? cartItems.items
-              : []
-          }
-        />
-      </Sheet>
+        <span className="text-[10px] font-bold mt-0.5 text-foreground/70 group-hover:text-primary transition-colors hidden lg:block">
+          Cart
+        </span>
+      </div>
+
+      {/* Cart Dialog (portal rendered, outside the button tree) */}
+      <CartDialog
+        open={openCartSheet}
+        onClose={() => setOpenCartSheet(false)}
+        cartItems={
+          cartItems && cartItems.items && cartItems.items.length > 0
+            ? cartItems.items
+            : []
+        }
+      />
     </div>
   );
 }

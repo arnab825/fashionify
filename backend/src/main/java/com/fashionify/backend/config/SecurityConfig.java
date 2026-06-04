@@ -68,6 +68,8 @@ public class SecurityConfig {
                             .requestMatchers("/api/common/feature/get").permitAll()
                             .requestMatchers("/api/shop/review/**").permitAll()
                             .requestMatchers("/api/admin/products/upload-image").permitAll()
+                            // Public contact form endpoint — no auth required
+                            .requestMatchers("/api/contact").permitAll()
                             .anyRequest().authenticated()
                 );
         
@@ -81,7 +83,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://127.0.0.1:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

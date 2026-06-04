@@ -7,7 +7,7 @@ import { fetchAnalytics } from "@/store/admin/analytics-slice";
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { AlertTriangle, Package, TrendingUp, ShoppingBag, Users, IndianRupee, Heart, BarChart3, Loader2, Calendar, Edit2, Trash2 } from "lucide-react";
+import { AlertTriangle, Package, TrendingUp, ShoppingBag, IndianRupee, Heart, BarChart3, Loader2, Calendar, Edit2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -206,13 +206,6 @@ function AdminDashboard() {
       color: "bg-green-500",
     },
     {
-      title: "Total Users",
-      value: analytics?.totalUsers ?? "—",
-      desc: "Registered accounts",
-      icon: Users,
-      color: "bg-primary",
-    },
-    {
       title: "Wishlist Entries",
       value: analytics?.wishlistCount ?? "—",
       desc: "Total wishlist items",
@@ -246,7 +239,7 @@ function AdminDashboard() {
               setActivePreset(p.id);
               setShowCustomPicker(false);
             }}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${activePreset === p.id
+            className={`px-3 py-1.5 rounded-sm text-sm font-medium transition-all ${activePreset === p.id
               ? "bg-primary text-primary-foreground shadow-sm"
               : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               }`}
@@ -259,7 +252,7 @@ function AdminDashboard() {
             setActivePreset("custom");
             setShowCustomPicker(true);
           }}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${activePreset === "custom"
+          className={`px-3 py-1.5 rounded-sm text-sm font-medium transition-all ${activePreset === "custom"
             ? "bg-primary text-primary-foreground shadow-sm"
             : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
             }`}
@@ -453,7 +446,7 @@ function AdminDashboard() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="relative overflow-hidden rounded-xl shadow-sm group"
+                  className="relative overflow-hidden rounded-sm shadow-sm group"
                   key={idx}
                 >
                   <img

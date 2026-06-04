@@ -23,9 +23,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findByCategoryInAndBrandIn(List<String> categories, List<String> brands, Pageable pageable);
 
-    // Search
+    // Search by title or description (primary)
     Page<Product> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
             String keyword1, String keyword2, Pageable pageable);
+
+    // Tag-aware search: find products that contain the keyword as a tag substring
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.tags t WHERE LOWER(t) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Product> findByTagContainingIgnoreCase(@Param("keyword") String keyword);
 
     // Tags-based lookup (used by tag migration service)
     @Query("SELECT DISTINCT p FROM Product p JOIN p.tags t WHERE t IN :tags")

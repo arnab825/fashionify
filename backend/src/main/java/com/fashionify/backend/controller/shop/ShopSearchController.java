@@ -9,7 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,19 +33,38 @@ public class ShopSearchController {
                     Map.of("success", false, "message", "Keyword is required"));
         }
 
+        // ── Primary search: title and description (paginated, sorted) ──
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "title"));
-        Page<Product> results = productRepository
+        Page<Product> titleDescResults = productRepository
                 .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
                         keyword, keyword, pageRequest);
 
+        // ── Secondary search: tags (eager, all matching — then deduplicate) ──
+        // Tag results augment the primary results; deduplication preserves title/desc rank
+        List<Product> tagResults = productRepository.findByTagContainingIgnoreCase(keyword);
+
+        // Merge: title/desc results first (maintains sort), then tag matches not already included
+        Set<Long> primaryIds = titleDescResults.getContent().stream()
+                .map(Product::getId)
+                .collect(Collectors.toSet());
+
+        List<Map<String, Object>> merged = new ArrayList<>();
+
+        // Add primary results (sorted by title)
+        titleDescResults.getContent().forEach(p -> merged.add(shopProductController.enrichProduct(p)));
+
+        // Append tag-matched results not already in primary list
+        tagResults.stream()
+                .filter(p -> !primaryIds.contains(p.getId()))
+                .forEach(p -> merged.add(shopProductController.enrichProduct(p)));
+
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "data", results.getContent().stream()
-                        .map(shopProductController::enrichProduct)
-                        .collect(Collectors.toList()),
-                "currentPage", results.getNumber(),
-                "totalPages", results.getTotalPages(),
-                "totalProducts", results.getTotalElements()
+                "data", merged,
+                "currentPage", titleDescResults.getNumber(),
+                "totalPages", titleDescResults.getTotalPages(),
+                // totalProducts reflects the combined unique count
+                "totalProducts", merged.size()
         ));
     }
 }

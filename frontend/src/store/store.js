@@ -4,6 +4,7 @@ import adminProductsSlice from "./admin/products-slice";
 import adminOrderSlice from "./admin/order-slice";
 import adminUserSlice from "./admin/user-slice";
 import adminAnalyticsSlice from "./admin/analytics-slice";
+import adminMessagesReducer from "./admin/messages-slice";
 
 import shopProductsSlice from "./shop/products-slice";
 import shopCartSlice from "./shop/cart-slice";
@@ -22,6 +23,7 @@ const store = configureStore({
     adminOrder: adminOrderSlice,
     adminUser: adminUserSlice,
     adminAnalytics: adminAnalyticsSlice,
+    adminMessages: adminMessagesReducer,
 
     shopProducts: shopProductsSlice,
     shopCart: shopCartSlice,

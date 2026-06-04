@@ -6,9 +6,15 @@ import { getSearchResults, resetSearchResults } from "@/store/shop/search-slice"
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search} from "lucide-react";
+import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthModal } from "@/context/AuthModalContext";
+
+/** Popular tags that are representative of the category taxonomy — used as quick-search chips in the empty state. */
+const POPULAR_TAG_SUGGESTIONS = [
+  "trendy", "oversized", "casual", "streetwear", "summer wear",
+  "premium", "graphic print", "minimalist", "floral", "ethnic",
+];
 
 function SearchProducts() {
   const [searchParams] = useSearchParams();
@@ -113,9 +119,24 @@ function SearchProducts() {
       )}
 
       {!isLoading && !keyword.trim() && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Search className="h-16 w-16 text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground text-lg">Start typing to search products…</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center max-w-lg mx-auto">
+          <Search className="h-12 w-12 text-muted-foreground/30 mb-4" />
+          <p className="text-muted-foreground text-lg font-bold mb-6">Start typing to search products…</p>
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-3">
+            Popular searches
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {POPULAR_TAG_SUGGESTIONS.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => navigate(`/shop/search?keyword=${encodeURIComponent(tag)}`)}
+                className="text-sm font-black px-3 py-1.5 border-2 border-border rounded-sm bg-background hover:bg-primary hover:text-primary-foreground transition-all"
+                style={{ boxShadow: "2px 2px 0px 0px hsl(var(--neu-black))" }}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -128,7 +149,6 @@ function SearchProducts() {
             {searchResults.map((item) => (
               <ShoppingProductTile
                 key={item.id}
-                handleAddtoCart={handleAddtoCart}
                 product={item}
                 handleGetProductDetails={handleGetProductDetails}
               />

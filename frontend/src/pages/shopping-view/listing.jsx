@@ -200,7 +200,6 @@ function ShoppingListing() {
                   key={productItem.id}
                   handleGetProductDetails={handleGetProductDetails}
                   product={productItem}
-                  handleAddtoCart={handleAddtoCart}
                 />
               ))
             : (

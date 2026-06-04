@@ -423,7 +423,6 @@ function ShoppingHome() {
                 key={productItem.id}
                 handleGetProductDetails={handleGetProductDetails}
                 product={productItem}
-                handleAddtoCart={handleAddtoCart}
               />
             ))}
           </div>
