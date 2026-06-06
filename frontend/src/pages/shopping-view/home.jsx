@@ -20,7 +20,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllFilteredProducts,
@@ -112,6 +112,14 @@ function ShoppingHome() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const collectionsScrollRef = useRef(null);
+
+  const scrollCollections = (direction) => {
+    if (collectionsScrollRef.current) {
+      const scrollAmount = window.innerWidth > 768 ? 800 : 350;
+      collectionsScrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
   const { openAuthModal } = useAuthModal();
 
   function handleNavigateToListingPage(getCurrentItem, section) {
@@ -260,12 +268,13 @@ function ShoppingHome() {
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
               Curated collections by our expert stylists. Click a collection to discover the perfect look.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {collections.map((collection) => (
+            <div className="relative group/carousel">
+              <div ref={collectionsScrollRef} className="flex items-stretch overflow-x-auto snap-x snap-mandatory pt-4 pb-8 gap-6 px-4 hide-scrollbar scroll-smooth">
+                {collections.map((collection) => (
                 <div
                   key={collection.id}
                   onClick={() => navigate(`/shop/collection/${collection.id}`)}
-                  className="product-card flex flex-col group cursor-pointer h-full"
+                  className="product-card flex-none w-[85vw] sm:w-[60vw] md:w-[45vw] lg:w-[30vw] snap-center flex flex-col group cursor-pointer"
                 >
                   <div className="h-80 relative overflow-hidden bg-muted border-b-2 border-border">
                     <img
@@ -278,7 +287,7 @@ function ShoppingHome() {
                   </div>
                   <div className="p-6 flex flex-col flex-1 bg-card">
                     <h3 className="text-2xl font-black mb-2 tracking-tight line-clamp-1 text-foreground">{collection.name}</h3>
-                    <p className="text-muted-foreground text-sm font-bold flex-1 mb-4">{collection.description}</p>
+                    <p className="text-muted-foreground text-sm font-bold mb-4">{collection.description}</p>
                     <div className="mt-auto">
                       <div className="flex -space-x-3 overflow-hidden p-1 pt-2">
                         {collection.products?.map((p, i) => (
@@ -296,6 +305,28 @@ function ShoppingHome() {
                   </div>
                 </div>
               ))}
+            </div>
+            
+            {collections.length > 2 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollCollections('left')}
+                  className="absolute top-1/2 -translate-y-1/2 -left-4 md:-left-6 w-12 h-12 rounded-full bg-card border-2 border-border shadow-[4px_4px_0px_0px_hsl(var(--neu-black))] hover:bg-muted opacity-0 group-hover/carousel:opacity-100 transition-opacity z-10 hidden md:flex"
+                >
+                  <ChevronLeftIcon className="w-6 h-6" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollCollections('right')}
+                  className="absolute top-1/2 -translate-y-1/2 -right-4 md:-right-6 w-12 h-12 rounded-full bg-card border-2 border-border shadow-[4px_4px_0px_0px_hsl(var(--neu-black))] hover:bg-muted opacity-0 group-hover/carousel:opacity-100 transition-opacity z-10 hidden md:flex"
+                >
+                  <ChevronRightIcon className="w-6 h-6" />
+                </Button>
+              </>
+            )}
             </div>
           </div>
         </section>
@@ -336,7 +367,7 @@ function ShoppingHome() {
 
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-extrabold text-center mb-12 dark:text-gradient">Shop by Brand</h2>
+          <h2 className="text-4xl font-extrabold text-center mb-12 dark:text-gradient">Shop by Iconic Brands</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {brandsWithIcon.map((brandItem, index) => (
               <motion.div
