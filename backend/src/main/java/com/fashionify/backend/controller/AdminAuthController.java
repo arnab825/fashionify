@@ -9,6 +9,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +28,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin-auth")
 public class AdminAuthController {
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -55,14 +58,15 @@ public class AdminAuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-        Cookie cookie = new Cookie("token", jwt);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(60 * 60 * 24);
-        response.addCookie(cookie);
-        response.addHeader("Set-Cookie",
-                "token=" + jwt + "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
+        boolean isLocal = allowedOrigins == null || allowedOrigins.contains("localhost") || allowedOrigins.contains("127.0.0.1");
+        boolean cookieSecure = !isLocal;
+        String cookieSameSite = isLocal ? "Lax" : "None";
+
+        String cookieHeader = "token=" + jwt + "; Path=/; HttpOnly; Max-Age=86400; SameSite=" + cookieSameSite;
+        if (cookieSecure) {
+            cookieHeader += "; Secure";
+        }
+        response.addHeader("Set-Cookie", cookieHeader);
 
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("email", userDetails.getEmail());
