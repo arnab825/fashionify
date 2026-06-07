@@ -78,8 +78,8 @@ JWT_SECRET=your_random_secret_string_minimum_256_bits_length
 JWT_EXPIRATION_MS=86400000
 
 # Admin Credentials
-ADMIN_EMAIL=admin@gmail.com
-ADMIN_PASSWORD=Admin.123
+ADMIN_EMAIL=admin_email
+ADMIN_PASSWORD=admin_password
 
 # Cloudinary Config
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
