@@ -30,17 +30,39 @@ function AdminOrderDetailsView({ orderDetails }) {
     }
   }, [dispatch, orderDetails, productList]);
 
+  useEffect(() => {
+    if (orderDetails?.orderStatus) {
+      setFormData({
+        status: orderDetails.orderStatus,
+      });
+    }
+  }, [orderDetails]);
+
   function handleUpdateStatus(event) {
     event.preventDefault();
     const { status } = formData;
+
+    if (!status || status.trim() === "") {
+      toast({
+        title: "Please select a valid status.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (status === orderDetails?.orderStatus) {
+      toast({
+        title: "Order is already in this status.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     dispatch(
       updateOrderStatus({ id: orderDetails?.id, orderStatus: status })
     ).then((data) => {
       if (data?.payload?.success) {
-        // Optimistic update already applied in the slice — just refresh details
         dispatch(getOrderDetailsForAdmin(orderDetails?.id));
-        setFormData(initialFormData);
         toast({
           title: data?.payload?.message || "Order status updated!",
         });
@@ -101,11 +123,10 @@ function AdminOrderDetailsView({ orderDetails }) {
           <div className="space-y-1">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Payment Status</span>
             <div>
-              <Badge className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${
-                orderDetails?.paymentStatus === "paid" || orderDetails?.paymentStatus === "simulated_paid"
+              <Badge className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${orderDetails?.paymentStatus === "paid" || orderDetails?.paymentStatus === "simulated_paid"
                   ? "bg-green-500/10 text-green-700 border-green-500/20"
                   : "bg-amber-500/10 text-amber-700 border-amber-500/20"
-              }`}>
+                }`}>
                 {orderDetails?.paymentStatus === "simulated_paid" ? "Paid" : orderDetails?.paymentStatus}
               </Badge>
             </div>
@@ -113,17 +134,16 @@ function AdminOrderDetailsView({ orderDetails }) {
           <div className="space-y-1">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Order Status</span>
             <div>
-              <Badge className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${
-                orderDetails?.orderStatus === "delivered"
+              <Badge className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${orderDetails?.orderStatus === "delivered"
                   ? "bg-green-500/10 text-green-700 border-green-500/20"
                   : orderDetails?.orderStatus === "rejected"
-                  ? "bg-red-500/10 text-red-700 border-red-500/20"
-                  : orderDetails?.orderStatus === "inShipping"
-                  ? "bg-purple-500/10 text-purple-700 border-purple-500/20"
-                  : orderDetails?.orderStatus === "inProcess"
-                  ? "bg-blue-500/10 text-blue-700 border-blue-500/20"
-                  : "bg-amber-500/10 text-amber-700 border-amber-500/20"
-              }`}>
+                    ? "bg-red-500/10 text-red-700 border-red-500/20"
+                    : orderDetails?.orderStatus === "inShipping"
+                      ? "bg-purple-500/10 text-purple-700 border-purple-500/20"
+                      : orderDetails?.orderStatus === "inProcess"
+                        ? "bg-blue-500/10 text-blue-700 border-blue-500/20"
+                        : "bg-amber-500/10 text-amber-700 border-amber-500/20"
+                }`}>
                 {formatStatus(orderDetails?.orderStatus)}
               </Badge>
             </div>
