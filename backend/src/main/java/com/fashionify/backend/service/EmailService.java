@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Service for sending plain-text emails using Resend REST API.
+ * Service for sending plain-text emails using Brevo REST API.
  */
 @Service
 @RequiredArgsConstructor
@@ -24,39 +24,42 @@ public class EmailService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    @Value("${resend.api.key}")
-    private String resendApiKey;
+    @Value("${brevo.api.key}")
+    private String brevoApiKey;
 
-    @Value("${resend.from.email:Fashionify <onboarding@resend.dev>}")
+    @Value("${brevo.from.email:info@fashionify.com}")
     private String fromEmail;
 
+    @Value("${brevo.from.name:Fashionify}")
+    private String fromName;
+
     /**
-     * Sends a plain-text email using Resend API.
+     * Sends a plain-text email using Brevo API.
      *
      * @param to      recipient address
      * @param subject email subject line
      * @param body    plain-text body
      */
     public void sendSimpleEmail(String to, String subject, String body) {
-        if (resendApiKey == null || resendApiKey.isBlank() || resendApiKey.contains("placeholder") || resendApiKey.contains("your_api_key")) {
-            log.warn("Resend API key is not configured. Skipping sending email to {}. Subject: {}", to, subject);
+        if (brevoApiKey == null || brevoApiKey.isBlank() || brevoApiKey.contains("placeholder") || brevoApiKey.contains("your_api_key")) {
+            log.warn("Brevo API key is not configured. Skipping sending email to {}. Subject: {}", to, subject);
             log.info("Email body would be:\n{}", body);
             return;
         }
 
         try {
             Map<String, Object> payload = Map.of(
-                    "from", fromEmail,
-                    "to", List.of(to),
+                    "sender", Map.of("name", fromName, "email", fromEmail),
+                    "to", List.of(Map.of("email", to)),
                     "subject", subject,
-                    "text", body
+                    "textContent", body
             );
 
             String requestBody = objectMapper.writeValueAsString(payload);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.resend.com/emails"))
-                    .header("Authorization", "Bearer " + resendApiKey)
+                    .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                    .header("api-key", brevoApiKey)
                     .header("Content-Type", "application/json")
                     .header("User-Agent", "Fashionify-Backend/1.0")
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody))
@@ -65,14 +68,15 @@ public class EmailService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                log.info("Email successfully sent to {} via Resend. Response: {}", to, response.body());
+                log.info("Email successfully sent to {} via Brevo. Response: {}", to, response.body());
             } else {
-                log.error("Failed to send email to {} via Resend. Status code: {}, Response: {}", to, response.statusCode(), response.body());
-                throw new RuntimeException("Resend API error: " + response.body());
+                log.error("Failed to send email to {} via Brevo. Status code: {}, Response: {}", to, response.statusCode(), response.body());
+                throw new RuntimeException("Brevo API error: " + response.body());
             }
         } catch (Exception e) {
-            log.error("Error sending email via Resend to {}: {}", to, e.getMessage(), e);
-            throw new RuntimeException("Failed to send email via Resend", e);
+            log.error("Error sending email via Brevo to {}: {}", to, e.getMessage(), e);
+            throw new RuntimeException("Failed to send email via Brevo", e);
         }
     }
 }
+

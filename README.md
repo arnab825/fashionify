@@ -90,9 +90,10 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 RAZORPAY_KEY_ID=rzp_test_yourkeyid
 RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 
-# Resend Email Config (Replaced SMTP)
-RESEND_API_KEY=re_your_api_key
-RESEND_FROM_EMAIL=Fashionify <onboarding@resend.dev>
+# Brevo Email Config
+BREVO_API_KEY=your_brevo_api_key
+BREVO_FROM_EMAIL=info@fashionify.com
+BREVO_FROM_NAME=Fashionify
 
 # CORS (Comma-separated allowed origins)
 ALLOWED_ORIGINS=http://localhost:5173
