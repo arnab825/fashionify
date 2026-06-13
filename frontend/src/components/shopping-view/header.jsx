@@ -195,7 +195,7 @@ function HeaderRightContent() {
       {/* Profile Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <div className="flex flex-col items-center justify-center cursor-pointer group pt-1 outline-none">
+          <button className="flex flex-col items-center justify-center cursor-pointer group pt-1 outline-none bg-transparent border-0 p-0" aria-label="User profile menu">
             {isAuthenticated ? (
               <Avatar className="h-6 w-6 border-2 border-border hover:border-primary transition-colors">
                 <AvatarImage
@@ -212,7 +212,7 @@ function HeaderRightContent() {
             <span className="text-[10px] font-bold mt-0.5 text-foreground/70 group-hover:text-primary transition-colors hidden lg:block">
               Profile
             </span>
-          </div>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           side="bottom"
@@ -269,9 +269,10 @@ function HeaderRightContent() {
       </DropdownMenu>
 
       {/* Wishlist */}
-      <div
+      <button
         onClick={handleWishlistClick}
-        className="flex flex-col items-center justify-center cursor-pointer group relative pt-1"
+        className="flex flex-col items-center justify-center cursor-pointer group relative pt-1 bg-transparent border-0 p-0 outline-none"
+        aria-label="Wishlist"
       >
         <div className="relative">
           <Heart className="h-5 w-5 text-foreground/80 group-hover:text-primary-dark transition-colors" />
@@ -284,16 +285,13 @@ function HeaderRightContent() {
         <span className="text-[10px] font-bold mt-0.5 text-foreground/70 group-hover:text-primary-dark transition-colors hidden lg:block">
           Wishlist
         </span>
-      </div>
+      </button>
 
       {/* Cart — now opens a centered Neubrutalist dialog, not a slide-over */}
-      <div
+      <button
         onClick={() => setOpenCartSheet(true)}
-        className="flex flex-col items-center justify-center cursor-pointer group relative pt-1 outline-none"
-        role="button"
+        className="flex flex-col items-center justify-center cursor-pointer group relative pt-1 outline-none bg-transparent border-0 p-0"
         aria-label="Open cart"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setOpenCartSheet(true); }}
       >
         <div className="relative">
           <ShoppingCart className="h-5 w-5 text-foreground/80 group-hover:text-primary transition-colors" />
@@ -304,7 +302,7 @@ function HeaderRightContent() {
         <span className="text-[10px] font-bold mt-0.5 text-foreground/70 group-hover:text-primary transition-colors hidden lg:block">
           Cart
         </span>
-      </div>
+      </button>
 
       {/* Cart Dialog (portal rendered, outside the button tree) */}
       <CartDialog

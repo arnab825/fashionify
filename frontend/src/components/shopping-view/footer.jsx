@@ -47,16 +47,17 @@ function ShoppingFooter() {
             </p>
             <div className="flex gap-3">
               {[
-                { icon: Facebook, href: "#" },
-                { icon: Twitter, href: "#" },
-                { icon: Instagram, href: "#" },
-                { icon: Youtube, href: "#" },
-              ].map(({ icon: Icon, href }, i) => (
+                { icon: Facebook, href: "#", label: "Facebook" },
+                { icon: Twitter, href: "#", label: "Twitter" },
+                { icon: Instagram, href: "#", label: "Instagram" },
+                { icon: Youtube, href: "#", label: "YouTube" },
+              ].map(({ icon: Icon, href, label }, i) => (
                 <Link
                   key={i}
                   to={href}
                   className="p-2 border-2 border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                   style={{ boxShadow: "2px 2px 0px 0px hsl(var(--neu-black))" }}
+                  aria-label={`Follow us on ${label}`}
                 >
                   <Icon className="h-4 w-4" />
                 </Link>
@@ -130,6 +131,7 @@ function ShoppingFooter() {
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-primary text-primary-foreground p-2 border-2 border-primary hover:bg-background hover:text-primary transition-colors disabled:opacity-50"
+                aria-label="Subscribe to newsletter"
               >
                 <Send className="w-4 h-4" />
               </button>

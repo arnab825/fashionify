@@ -247,12 +247,16 @@ function ShoppingHome() {
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`h-2.5 md:h-3 rounded-full border-2 border-black transition-all duration-300 ${currentSlide === index
-                  ? "w-6 md:w-8 bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                  : "w-2.5 md:w-3 bg-white hover:bg-gray-200"
-                  }`}
+                className="w-12 h-12 flex items-center justify-center bg-transparent border-0 outline-none cursor-pointer"
                 aria-label={`Go to slide ${index + 1}`}
-              />
+              >
+                <span
+                  className={`h-2.5 md:h-3 rounded-full border-2 border-black transition-all duration-300 block ${currentSlide === index
+                    ? "w-6 md:w-8 bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                    : "w-2.5 md:w-3 bg-white hover:bg-gray-200"
+                    }`}
+                />
+              </button>
             ))}
           </div>
         </div>
@@ -311,6 +315,7 @@ function ShoppingHome() {
                     size="icon"
                     onClick={() => scrollCollections('left')}
                     className="absolute top-1/2 -translate-y-1/2 -left-4 md:-left-6 w-12 h-12 rounded-full bg-card border-2 border-border shadow-[4px_4px_0px_0px_hsl(var(--neu-black))] hover:bg-muted opacity-0 group-hover/carousel:opacity-100 transition-opacity z-10 hidden md:flex"
+                    aria-label="Previous collection"
                   >
                     <ChevronLeftIcon className="w-6 h-6" />
                   </Button>
@@ -319,6 +324,7 @@ function ShoppingHome() {
                     size="icon"
                     onClick={() => scrollCollections('right')}
                     className="absolute top-1/2 -translate-y-1/2 -right-4 md:-right-6 w-12 h-12 rounded-full bg-card border-2 border-border shadow-[4px_4px_0px_0px_hsl(var(--neu-black))] hover:bg-muted opacity-0 group-hover/carousel:opacity-100 transition-opacity z-10 hidden md:flex"
+                    aria-label="Next collection"
                   >
                     <ChevronRightIcon className="w-6 h-6" />
                   </Button>
@@ -458,7 +464,7 @@ function ShoppingHome() {
                         />
                       </div>
                       <div className="text-left flex-1">
-                        <h4 className="font-bold text-base text-foreground leading-tight">{review.userName}</h4>
+                        <h3 className="font-bold text-base text-foreground leading-tight">{review.userName}</h3>
                         {review.verifiedPurchase && (
                           <span className="text-[10px] text-green-700 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide inline-flex items-center gap-1 mt-1">
                             <CheckCircle2 className="w-3 h-3" />

@@ -46,7 +46,7 @@ function ShoppingProductTile({ product, handleGetProductDetails }) {
   }
 
   return (
-    <article
+    <div
       onClick={() => handleGetProductDetails(product?.id)}
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -66,14 +66,14 @@ function ShoppingProductTile({ product, handleGetProductDetails }) {
         {/* Stock badges */}
         {totalStock === 0 ? (
           <div
-            className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[10px] font-black px-2 py-0.5 border-2 border-border"
+            className="absolute top-2 left-2 bg-red-700 text-white text-[10px] font-black px-2 py-0.5 border-2 border-border"
             style={{ boxShadow: "2px 2px 0px 0px hsl(var(--neu-black))" }}
           >
             OUT OF STOCK
           </div>
         ) : totalStock <= 5 ? (
           <div
-            className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[10px] font-black px-2 py-0.5 border-2 border-border flex items-center gap-1"
+            className="absolute top-2 left-2 bg-red-700 text-white text-[10px] font-black px-2 py-0.5 border-2 border-border flex items-center gap-1"
             style={{ boxShadow: "2px 2px 0px 0px hsl(var(--neu-black))" }}
           >
             <Flame className="w-3 h-3" /> {`Only ${totalStock} left`}
@@ -87,7 +87,7 @@ function ShoppingProductTile({ product, handleGetProductDetails }) {
           </div>
         ) : product?.salePrice > 0 ? (
           <div
-            className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[10px] font-black px-2 py-0.5 border-2 border-border"
+            className="absolute top-2 left-2 bg-red-700 text-white text-[10px] font-black px-2 py-0.5 border-2 border-border"
             style={{ boxShadow: "2px 2px 0px 0px hsl(var(--neu-black))" }}
           >
             SALE
@@ -183,7 +183,7 @@ function ShoppingProductTile({ product, handleGetProductDetails }) {
         )}
       </div>
 
-    </article>
+    </div>
   );
 }
 
