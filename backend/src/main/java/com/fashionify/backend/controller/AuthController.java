@@ -117,7 +117,7 @@ public class AuthController {
     @GetMapping("/check-auth")
     public ResponseEntity<?> checkAuth(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body(new MessageResponse(false, "Unauthorised user!"));
+            return ResponseEntity.ok(new MessageResponse(false, "Unauthorised user!"));
         }
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
