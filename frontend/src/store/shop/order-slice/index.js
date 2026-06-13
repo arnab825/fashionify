@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/services/api";
 
 const initialState = {
   isLoading: false,
@@ -11,11 +11,7 @@ const initialState = {
 export const createNewOrder = createAsyncThunk(
   "/order/createNewOrder",
   async (orderData) => {
-    const response = await axios.post(
-      import.meta.env.VITE_API_URL + "/api/shop/order/create",
-      orderData,
-      { withCredentials: true }
-    );
+    const response = await api.post("/api/shop/order/create", orderData);
     return response.data;
   }
 );
@@ -23,11 +19,7 @@ export const createNewOrder = createAsyncThunk(
 export const confirmSimulatedOrder = createAsyncThunk(
   "/order/confirmSimulatedOrder",
   async (orderId) => {
-    const response = await axios.post(
-      import.meta.env.VITE_API_URL + "/api/shop/order/confirm-simulated",
-      { orderId },
-      { withCredentials: true }
-    );
+    const response = await api.post("/api/shop/order/confirm-simulated", { orderId });
     return response.data;
   }
 );
@@ -35,10 +27,7 @@ export const confirmSimulatedOrder = createAsyncThunk(
 export const getAllOrdersByUserId = createAsyncThunk(
   "/order/getAllOrdersByUserId",
   async (userId) => {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/shop/order/list/${userId}`,
-      { withCredentials: true }
-    );
+    const response = await api.get(`/api/shop/order/list/${userId}`);
     return response.data;
   }
 );
@@ -46,10 +35,7 @@ export const getAllOrdersByUserId = createAsyncThunk(
 export const getOrderDetails = createAsyncThunk(
   "/order/getOrderDetails",
   async (id) => {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/shop/order/details/${id}`,
-      { withCredentials: true }
-    );
+    const response = await api.get(`/api/shop/order/details/${id}`);
     return response.data;
   }
 );
@@ -57,10 +43,9 @@ export const getOrderDetails = createAsyncThunk(
 export const cancelOrder = createAsyncThunk(
   "/order/cancelOrder",
   async ({ orderId, userId }) => {
-    const response = await axios.patch(
-      `${import.meta.env.VITE_API_URL}/api/shop/order/${orderId}/cancel`,
-      { userId },
-      { withCredentials: true }
+    const response = await api.patch(
+      `/api/shop/order/${orderId}/cancel`,
+      { userId }
     );
     return response.data;
   }

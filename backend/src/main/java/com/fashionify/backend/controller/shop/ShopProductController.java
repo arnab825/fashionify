@@ -1,8 +1,8 @@
 package com.fashionify.backend.controller.shop;
 
 import com.fashionify.backend.entity.Product;
-import com.fashionify.backend.entity.ProductSizeVariant;
 import com.fashionify.backend.repository.ProductRepository;
+import com.fashionify.backend.util.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -108,7 +108,7 @@ public class ShopProductController {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", true);
-        response.put("products", pagedProducts.stream().map(this::enrichProduct).collect(Collectors.toList()));
+        response.put("products", pagedProducts.stream().map(ProductMapper::toResponseMap).collect(Collectors.toList()));
         response.put("currentPage", page);
         response.put("totalPages", totalPages);
         response.put("totalProducts", totalProducts);
@@ -119,7 +119,7 @@ public class ShopProductController {
     @GetMapping("/get/{id}")
     public ResponseEntity<?> getProductDetails(@PathVariable Long id) {
         return productRepository.findById(id)
-                .map(product -> ResponseEntity.ok(Map.of("success", true, "data", enrichProduct(product))))
+                .map(product -> ResponseEntity.ok(Map.of("success", true, "data", ProductMapper.toResponseMap(product))))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -167,40 +167,5 @@ public class ShopProductController {
         ));
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
 
-    public Map<String, Object> enrichProduct(Product product) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("id", product.getId());
-        map.put("title", product.getTitle());
-        map.put("description", product.getDescription());
-        map.put("category", product.getCategory());
-        map.put("brand", product.getBrand());
-        map.put("price", product.getPrice());
-        map.put("salePrice", product.getSalePrice());
-        map.put("averageReview", product.getAverageReview());
-        map.put("createdAt", product.getCreatedAt());
-        map.put("updatedAt", product.getUpdatedAt());
-        map.put("tags", product.getTags() != null ? product.getTags() : List.of());
-
-        map.put("images", product.getImages());
-        map.put("image", product.getImage());
-
-        List<Map<String, Object>> variants = product.getSizeVariants().stream().map(v -> {
-            Map<String, Object> vm = new LinkedHashMap<>();
-            vm.put("id", v.getId());
-            vm.put("size", v.getSize());
-            vm.put("stock", v.getStock());
-            vm.put("measurements", v.getMeasurements());
-            vm.put("lowStock", v.getStock() <= 5 && v.getStock() > 0);
-            vm.put("outOfStock", v.getStock() == 0);
-            return vm;
-        }).collect(Collectors.toList());
-        map.put("sizeVariants", variants);
-
-        int totalStock = product.getSizeVariants().stream().mapToInt(ProductSizeVariant::getStock).sum();
-        map.put("totalStock", totalStock);
-
-        return map;
-    }
 }

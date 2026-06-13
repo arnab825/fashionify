@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/services/api";
 
 const initialState = {
   isAuthenticated: false,
@@ -11,13 +11,7 @@ export const registerUser = createAsyncThunk(
   "/auth/register",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + "/api/auth/signup/initiate",
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await api.post("/api/auth/signup/initiate", formData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "An error occurred" });
@@ -29,13 +23,7 @@ export const verifyRegisterOtp = createAsyncThunk(
   "/auth/verifyOtp",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + "/api/auth/signup/verify",
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await api.post("/api/auth/signup/verify", formData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "An error occurred" });
@@ -47,13 +35,7 @@ export const loginUser = createAsyncThunk(
   "/auth/login",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + "/api/auth/login",
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await api.post("/api/auth/login", formData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "An error occurred" });
@@ -65,11 +47,7 @@ export const adminLoginUser = createAsyncThunk(
   "/auth/adminLogin",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + "/api/admin-auth/login",
-        formData,
-        { withCredentials: true }
-      );
+      const response = await api.post("/api/admin-auth/login", formData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "An error occurred" });
@@ -79,35 +57,20 @@ export const adminLoginUser = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk(
   "/auth/logout",
-
   async () => {
-    const response = await axios.post(
-      import.meta.env.VITE_API_URL + "/api/auth/logout",
-      {},
-      {
-        withCredentials: true,
-      }
-    );
-
+    const response = await api.post("/api/auth/logout", {});
     return response.data;
   }
 );
 
 export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
-
   async () => {
-    const response = await axios.get(
-      import.meta.env.VITE_API_URL + "/api/auth/check-auth",
-      {
-        withCredentials: true,
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
-        },
-      }
-    );
-
+    const response = await api.get("/api/auth/check-auth", {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      },
+    });
     return response.data;
   }
 );
@@ -116,11 +79,7 @@ export const updatePreferences = createAsyncThunk(
   "/auth/updatePreferences",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.put(
-        import.meta.env.VITE_API_URL + "/api/auth/update-preferences",
-        formData,
-        { withCredentials: true }
-      );
+      const response = await api.put("/api/auth/update-preferences", formData);
       return { ...response.data, formData };
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "An error occurred" });
@@ -132,11 +91,7 @@ export const updatePassword = createAsyncThunk(
   "/auth/updatePassword",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.put(
-        import.meta.env.VITE_API_URL + "/api/auth/update-password",
-        formData,
-        { withCredentials: true }
-      );
+      const response = await api.put("/api/auth/update-password", formData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "An error occurred" });
@@ -148,11 +103,7 @@ export const updateProfile = createAsyncThunk(
   "/auth/updateProfile",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.put(
-        import.meta.env.VITE_API_URL + "/api/auth/update-profile",
-        formData,
-        { withCredentials: true }
-      );
+      const response = await api.put("/api/auth/update-profile", formData);
       return { ...response.data, formData };
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "An error occurred" });
@@ -164,10 +115,7 @@ export const deleteAccount = createAsyncThunk(
   "/auth/deleteAccount",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(
-        import.meta.env.VITE_API_URL + "/api/auth/delete-account",
-        { withCredentials: true }
-      );
+      const response = await api.delete("/api/auth/delete-account");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "An error occurred" });

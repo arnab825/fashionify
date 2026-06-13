@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/services/api";
 
 const initialState = {
   isLoading: false,
@@ -10,11 +10,10 @@ const initialState = {
 export const addNewProduct = createAsyncThunk(
   "/products/addnewproduct",
   async (formData) => {
-    const result = await axios.post(
-      import.meta.env.VITE_API_URL + "/api/admin/products/add",
+    const result = await api.post(
+      "/api/admin/products/add",
       formData,
       {
-        withCredentials: true,
         headers: { "Content-Type": "application/json" },
       }
     );
@@ -25,10 +24,7 @@ export const addNewProduct = createAsyncThunk(
 export const fetchAllProducts = createAsyncThunk(
   "/products/fetchAllProducts",
   async () => {
-    const result = await axios.get(
-      import.meta.env.VITE_API_URL + "/api/admin/products/get",
-      { withCredentials: true }
-    );
+    const result = await api.get("/api/admin/products/get");
     return result?.data;
   }
 );
@@ -36,10 +32,7 @@ export const fetchAllProducts = createAsyncThunk(
 export const fetchLowStockProducts = createAsyncThunk(
   "/products/fetchLowStockProducts",
   async () => {
-    const result = await axios.get(
-      import.meta.env.VITE_API_URL + "/api/admin/products/low-stock",
-      { withCredentials: true }
-    );
+    const result = await api.get("/api/admin/products/low-stock");
     return result?.data;
   }
 );
@@ -47,11 +40,10 @@ export const fetchLowStockProducts = createAsyncThunk(
 export const editProduct = createAsyncThunk(
   "/products/editProduct",
   async ({ id, formData }) => {
-    const result = await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/admin/products/edit/${id}`,
+    const result = await api.put(
+      `/api/admin/products/edit/${id}`,
       formData,
       {
-        withCredentials: true,
         headers: { "Content-Type": "application/json" },
       }
     );
@@ -62,10 +54,7 @@ export const editProduct = createAsyncThunk(
 export const deleteProduct = createAsyncThunk(
   "/products/deleteProduct",
   async (id) => {
-    const result = await axios.delete(
-      `${import.meta.env.VITE_API_URL}/api/admin/products/delete/${id}`,
-      { withCredentials: true }
-    );
+    const result = await api.delete(`/api/admin/products/delete/${id}`);
     return result?.data;
   }
 );

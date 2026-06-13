@@ -2,6 +2,7 @@ package com.fashionify.backend.controller.shop;
 
 import com.fashionify.backend.entity.Product;
 import com.fashionify.backend.repository.ProductRepository;
+import com.fashionify.backend.util.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,9 +19,6 @@ public class ShopSearchController {
 
     @Autowired
     private ProductRepository productRepository;
-
-    @Autowired
-    private ShopProductController shopProductController;
 
     @GetMapping("/{keyword}")
     public ResponseEntity<?> searchProducts(
@@ -51,12 +49,12 @@ public class ShopSearchController {
         List<Map<String, Object>> merged = new ArrayList<>();
 
         // Add primary results (sorted by title)
-        titleDescResults.getContent().forEach(p -> merged.add(shopProductController.enrichProduct(p)));
+        titleDescResults.getContent().forEach(p -> merged.add(ProductMapper.toResponseMap(p)));
 
         // Append tag-matched results not already in primary list
         tagResults.stream()
                 .filter(p -> !primaryIds.contains(p.getId()))
-                .forEach(p -> merged.add(shopProductController.enrichProduct(p)));
+                .forEach(p -> merged.add(ProductMapper.toResponseMap(p)));
 
         return ResponseEntity.ok(Map.of(
                 "success", true,

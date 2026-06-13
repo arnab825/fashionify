@@ -8,7 +8,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { AlertTriangle, Package, TrendingUp, ShoppingBag, IndianRupee, Heart, BarChart3, Loader2, Calendar, Edit2, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
@@ -501,6 +501,9 @@ function AdminDashboard() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Slide Active Dates</DialogTitle>
+            <DialogDescription className="sr-only">
+              Edit start and end dates and optional redirect link for the slideshow banner.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

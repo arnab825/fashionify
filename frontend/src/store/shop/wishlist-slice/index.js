@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/services/api";
 
 const initialState = {
   isLoading: false,
@@ -9,8 +9,8 @@ const initialState = {
 export const addToWishlist = createAsyncThunk(
   "wishlist/addToWishlist",
   async ({ userId, productId }) => {
-    const response = await axios.post(
-      import.meta.env.VITE_API_URL + "/api/shop/wishlist/add",
+    const response = await api.post(
+      "/api/shop/wishlist/add",
       { userId, productId }
     );
     return response.data;
@@ -20,9 +20,7 @@ export const addToWishlist = createAsyncThunk(
 export const fetchWishlistItems = createAsyncThunk(
   "wishlist/fetchWishlistItems",
   async (userId) => {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/shop/wishlist/get/${userId}`
-    );
+    const response = await api.get(`/api/shop/wishlist/get/${userId}`);
     return response.data;
   }
 );
@@ -30,8 +28,8 @@ export const fetchWishlistItems = createAsyncThunk(
 export const removeFromWishlist = createAsyncThunk(
   "wishlist/removeFromWishlist",
   async ({ userId, productId }) => {
-    const response = await axios.delete(
-      `${import.meta.env.VITE_API_URL}/api/shop/wishlist/delete/${userId}/${productId}`
+    const response = await api.delete(
+      `/api/shop/wishlist/delete/${userId}/${productId}`
     );
     return response.data;
   }

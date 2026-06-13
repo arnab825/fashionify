@@ -16,6 +16,11 @@ import java.time.Period;
 import java.time.format.DateTimeParseException;
 import java.security.SecureRandom;
 
+/**
+ * Service handling the secure OTP (One-Time Password) registration flow.
+ * Performs validation checks (uniqueness of credentials, age validation limit, etc.)
+ * before sending generated cryptographically secure verification codes via email.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -153,7 +158,7 @@ public class OtpService {
             emailService.sendSimpleEmail(toEmail, subject, body);
             log.info("OTP email successfully sent to {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send OTP email to {} (Resend may not be configured). OTP is: {}", toEmail, otp);
+            log.error("Failed to send OTP email to {} (Brevo may not be configured). OTP is: {}", toEmail, otp);
             log.error("Mail Error: {}", e.getMessage());
             // We swallow the exception here so the transaction doesn't roll back, 
             // allowing the developer to see the OTP in the console and continue testing.

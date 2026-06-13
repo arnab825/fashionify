@@ -25,7 +25,6 @@
     "axios": "^1.7.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "date-fns": "^4.4.0",
     "framer-motion": "^12.40.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.429.0",

@@ -6,7 +6,11 @@ dist/
 dist-ssr/
 coverage/
 target/
+!**/src/main/**/target/
+!**/src/test/**/target/
 build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 bin/
 *.class
 *.jar
@@ -39,6 +43,11 @@ application-secret.properties
 .springBeans
 .sts4-cache
 .metadata/
+.apt_generated
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
 
 # ==========================================
 # OS Generated Files & Logs
@@ -57,3 +66,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# ==========================================
+# Documentation & Unused
+# ==========================================
+HELP.md
+

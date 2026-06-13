@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/services/api";
 
 const initialState = {
   isLoading: false,
@@ -9,10 +9,7 @@ const initialState = {
 export const getFeatureImages = createAsyncThunk(
   "/order/getFeatureImages",
   async () => {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/common/feature/get`
-    );
-
+    const response = await api.get("/api/common/feature/get");
     return response.data;
   }
 );
@@ -20,11 +17,7 @@ export const getFeatureImages = createAsyncThunk(
 export const addFeatureImage = createAsyncThunk(
   "/order/addFeatureImage",
   async (image) => {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/common/feature/add`,
-      { image }
-    );
-
+    const response = await api.post("/api/common/feature/add", { image });
     return response.data;
   }
 );
@@ -32,8 +25,8 @@ export const addFeatureImage = createAsyncThunk(
 export const editFeatureImage = createAsyncThunk(
   "/order/editFeatureImage",
   async ({ id, startDate, endDate }) => {
-    const response = await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/common/feature/edit/${id}`,
+    const response = await api.put(
+      `/api/common/feature/edit/${id}`,
       { startDate, endDate }
     );
     return response.data;
@@ -43,9 +36,7 @@ export const editFeatureImage = createAsyncThunk(
 export const deleteFeatureImage = createAsyncThunk(
   "/order/deleteFeatureImage",
   async (id) => {
-    const response = await axios.delete(
-      `${import.meta.env.VITE_API_URL}/api/common/feature/delete/${id}`
-    );
+    const response = await api.delete(`/api/common/feature/delete/${id}`);
     return response.data;
   }
 );

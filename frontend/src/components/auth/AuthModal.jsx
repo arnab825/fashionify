@@ -8,7 +8,7 @@ import { loginUser, registerUser, adminLoginUser, verifyRegisterOtp } from "@/st
 import { KeyRound } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 /* ─── Password strength ────────────────────────────────────────────────── */
 const PASSWORD_RULES = [
@@ -512,12 +512,12 @@ export default function AuthModal() {
                 <HousePlug className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-black tracking-tight text-foreground">
+                <DialogTitle className="text-xl font-black tracking-tight text-foreground">
                   {title}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5 max-w-[260px]">
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5 max-w-[260px]">
                   {subtitle}
-                </p>
+                </DialogDescription>
               </div>
             </div>
 

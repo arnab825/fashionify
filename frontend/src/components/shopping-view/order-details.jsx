@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { Badge } from "../ui/badge";
-import { DialogContent, DialogTitle } from "../ui/dialog";
+import { DialogContent, DialogTitle, DialogDescription } from "../ui/dialog";
 import { Separator } from "../ui/separator";
 import { jsPDF } from "jspdf";
 
@@ -277,7 +277,10 @@ function ShoppingOrderDetailsView({ orderDetails }) {
   }
 
   return (
-    <DialogContent aria-describedby={undefined} className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-2xl p-0">
+    <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-2xl p-0">
+      <DialogDescription className="sr-only">
+        Customer order details view displaying purchase details, order timeline status tracker, and receipts.
+      </DialogDescription>
       <DialogTitle className="text-xl font-bold tracking-tight text-foreground flex items-center justify-between border-b border-border pb-4 mb-2 pt-6 px-6">
         <div className="flex items-center gap-2">
           <ClipboardList className="w-5 h-5 text-primary" />

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import CommonForm from "../common/form";
-import { DialogContent, DialogTitle } from "../ui/dialog";
+import { DialogContent, DialogTitle, DialogDescription } from "../ui/dialog";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
 import { useDispatch, useSelector } from "react-redux";
@@ -84,7 +84,10 @@ function AdminOrderDetailsView({ orderDetails }) {
   }
 
   return (
-    <DialogContent aria-describedby={undefined} className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-2xl p-6">
+    <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-2xl p-6">
+      <DialogDescription className="sr-only">
+        Admin view of order details including items, pricing, shipping address, and status update options.
+      </DialogDescription>
       <DialogTitle className="text-xl font-bold tracking-tight text-foreground flex items-center justify-between border-b border-border pb-4 mb-2">
         <div className="flex items-center gap-2">
           <ClipboardList className="w-5 h-5 text-primary" />

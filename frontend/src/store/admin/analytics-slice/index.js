@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/services/api";
 
 const initialState = {
   isLoading: false,
@@ -9,9 +9,8 @@ const initialState = {
 export const fetchAnalytics = createAsyncThunk(
   "/admin/fetchAnalytics",
   async ({ startDate, endDate }) => {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/admin/analytics?start=${startDate}&end=${endDate}`,
-      { withCredentials: true }
+    const response = await api.get(
+      `/api/admin/analytics?start=${startDate}&end=${endDate}`
     );
     return response.data;
   }

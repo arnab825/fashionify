@@ -3,6 +3,7 @@ package com.fashionify.backend.controller.admin;
 import com.fashionify.backend.entity.Product;
 import com.fashionify.backend.entity.ProductSizeVariant;
 import com.fashionify.backend.repository.ProductRepository;
+import com.fashionify.backend.util.ProductMapper;
 import com.fashionify.backend.repository.ProductSizeVariantRepository;
 import com.fashionify.backend.repository.WaitlistRepository;
 import com.fashionify.backend.repository.CartRepository;
@@ -84,14 +85,14 @@ public class AdminProductController {
         Product product = buildProductFromPayload(payload, new Product());
         Product saved = productRepository.save(product);
         saveVariants(saved, payload);
-        return ResponseEntity.ok(Map.of("success", true, "data", enrichProduct(saved)));
+        return ResponseEntity.ok(Map.of("success", true, "data", ProductMapper.toResponseMap(saved)));
     }
 
     // ── Get All Products ──────────────────────────────────────────────────────
     @GetMapping("/get")
     public ResponseEntity<?> fetchAllProducts() {
         List<Map<String, Object>> enriched = productRepository.findAll()
-                .stream().map(this::enrichProduct).collect(Collectors.toList());
+                .stream().map(ProductMapper::toResponseMap).collect(Collectors.toList());
         return ResponseEntity.ok(Map.of("success", true, "data", enriched));
     }
 
@@ -100,7 +101,7 @@ public class AdminProductController {
     public ResponseEntity<?> getLowStockProducts() {
         List<Map<String, Object>> lowStock = productRepository.findAll().stream()
                 .filter(p -> p.getSizeVariants().stream().anyMatch(v -> v.getStock() <= 5))
-                .map(this::enrichProduct)
+                .map(ProductMapper::toResponseMap)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(Map.of("success", true, "data", lowStock));
     }
@@ -151,7 +152,7 @@ public class AdminProductController {
 
         // Reload
         Product reloaded = productRepository.findById(saved.getId()).orElse(saved);
-        return ResponseEntity.ok(Map.of("success", true, "data", enrichProduct(reloaded)));
+        return ResponseEntity.ok(Map.of("success", true, "data", ProductMapper.toResponseMap(reloaded)));
     }
 
     // ── Delete Product ────────────────────────────────────────────────────────
@@ -351,43 +352,5 @@ public class AdminProductController {
         }
     }
 
-    private Map<String, Object> enrichProduct(Product product) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("id", product.getId());
-        map.put("title", product.getTitle());
-        map.put("description", product.getDescription());
-        map.put("category", product.getCategory());
-        map.put("brand", product.getBrand());
-        map.put("price", product.getPrice());
-        map.put("salePrice", product.getSalePrice());
-        map.put("averageReview", product.getAverageReview());
-        map.put("createdAt", product.getCreatedAt());
-        map.put("updatedAt", product.getUpdatedAt());
-        map.put("tags", product.getTags() != null ? product.getTags() : List.of());
 
-        // Images
-        map.put("images", product.getImages());
-        map.put("image", product.getImage()); // first image, backward compat
-
-        // Size variants enriched with lowStock flag
-        List<Map<String, Object>> variants = product.getSizeVariants().stream().map(v -> {
-            Map<String, Object> vm = new LinkedHashMap<>();
-            vm.put("id", v.getId());
-            vm.put("size", v.getSize());
-            vm.put("stock", v.getStock());
-            vm.put("measurements", v.getMeasurements());
-            vm.put("lowStock", v.getStock() <= 5 && v.getStock() > 0);
-            vm.put("outOfStock", v.getStock() == 0);
-            return vm;
-        }).collect(Collectors.toList());
-        map.put("sizeVariants", variants);
-
-        // Computed totals
-        int totalStock = product.getSizeVariants().stream().mapToInt(ProductSizeVariant::getStock).sum();
-        map.put("totalStock", totalStock);
-        boolean hasLowStock = product.getSizeVariants().stream().anyMatch(v -> v.getStock() <= 5 && v.getStock() > 0);
-        map.put("hasLowStock", hasLowStock);
-
-        return map;
-    }
 }

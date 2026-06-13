@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "@/services/api";
 
-const BASE = (import.meta.env.VITE_API_URL || "") + "/api/admin/messages";
+const BASE = "/api/admin/messages";
 
 // ── Async thunks ─────────────────────────────────────────────────────────────
 
@@ -11,7 +11,7 @@ export const fetchMessages = createAsyncThunk(
     const url = filter === "unread"   ? `${BASE}/unread`
                : filter === "resolved" ? `${BASE}/resolved`
                : BASE;
-    const res = await axios.get(url, { withCredentials: true });
+    const res = await api.get(url);
     return res.data;
   }
 );
@@ -19,7 +19,7 @@ export const fetchMessages = createAsyncThunk(
 export const fetchUnreadCount = createAsyncThunk(
   "adminMessages/fetchUnreadCount",
   async () => {
-    const res = await axios.get(`${BASE}/unread-count`, { withCredentials: true });
+    const res = await api.get(`${BASE}/unread-count`);
     return res.data;
   }
 );
@@ -27,7 +27,7 @@ export const fetchUnreadCount = createAsyncThunk(
 export const markMessageRead = createAsyncThunk(
   "adminMessages/markRead",
   async ({ id, read }) => {
-    const res = await axios.patch(`${BASE}/${id}/read`, { read }, { withCredentials: true });
+    const res = await api.patch(`${BASE}/${id}/read`, { read });
     return res.data;
   }
 );
@@ -35,7 +35,7 @@ export const markMessageRead = createAsyncThunk(
 export const markMessageResolved = createAsyncThunk(
   "adminMessages/markResolved",
   async ({ id, resolved }) => {
-    const res = await axios.patch(`${BASE}/${id}/resolve`, { resolved }, { withCredentials: true });
+    const res = await api.patch(`${BASE}/${id}/resolve`, { resolved });
     return res.data;
   }
 );
@@ -43,7 +43,7 @@ export const markMessageResolved = createAsyncThunk(
 export const deleteMessage = createAsyncThunk(
   "adminMessages/delete",
   async (id) => {
-    await axios.delete(`${BASE}/${id}`, { withCredentials: true });
+    await api.delete(`${BASE}/${id}`);
     return id;
   }
 );

@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "@/services/api";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -9,10 +9,9 @@ const initialState = {
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
   async ({ userId, productId, quantity, selectedSize }) => {
-    const response = await axios.post(
-      import.meta.env.VITE_API_URL + "/api/shop/cart/add",
-      { userId, productId, quantity, selectedSize },
-      { withCredentials: true }
+    const response = await api.post(
+      "/api/shop/cart/add",
+      { userId, productId, quantity, selectedSize }
     );
     return response.data;
   }
@@ -21,11 +20,7 @@ export const addToCart = createAsyncThunk(
 export const fetchCartItems = createAsyncThunk(
   "cart/fetchCartItems",
   async (userId) => {
-    const response = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/shop/cart/get/${userId}`,
-      { withCredentials: true }
-    );
-
+    const response = await api.get(`/api/shop/cart/get/${userId}`);
     return response.data;
   }
 );
@@ -34,9 +29,8 @@ export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
   async ({ userId, productId, selectedSize }) => {
     const params = selectedSize ? `?selectedSize=${encodeURIComponent(selectedSize)}` : "";
-    const response = await axios.delete(
-      `${import.meta.env.VITE_API_URL}/api/shop/cart/${userId}/${productId}${params}`,
-      { withCredentials: true }
+    const response = await api.delete(
+      `/api/shop/cart/${userId}/${productId}${params}`
     );
     return response.data;
   }
@@ -45,10 +39,9 @@ export const deleteCartItem = createAsyncThunk(
 export const updateCartQuantity = createAsyncThunk(
   "cart/updateCartQuantity",
   async ({ userId, productId, quantity, selectedSize }) => {
-    const response = await axios.put(
-      import.meta.env.VITE_API_URL + "/api/shop/cart/update-cart",
-      { userId, productId, quantity, selectedSize },
-      { withCredentials: true }
+    const response = await api.put(
+      "/api/shop/cart/update-cart",
+      { userId, productId, quantity, selectedSize }
     );
     return response.data;
   }

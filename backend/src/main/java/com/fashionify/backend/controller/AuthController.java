@@ -85,15 +85,7 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-        boolean isLocal = allowedOrigins == null || allowedOrigins.contains("localhost") || allowedOrigins.contains("127.0.0.1");
-        boolean cookieSecure = !isLocal;
-        String cookieSameSite = isLocal ? "Lax" : "None";
-
-        String cookieHeader = "token=" + jwt + "; Path=/; HttpOnly; Max-Age=86400; SameSite=" + cookieSameSite;
-        if (cookieSecure) {
-            cookieHeader += "; Secure";
-        }
-        response.addHeader("Set-Cookie", cookieHeader);
+        jwtUtils.addJwtCookie(response, jwt, allowedOrigins);
 
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("email", userDetails.getEmail());
@@ -117,15 +109,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(HttpServletResponse response) {
-        boolean isLocal = allowedOrigins == null || allowedOrigins.contains("localhost") || allowedOrigins.contains("127.0.0.1");
-        boolean cookieSecure = !isLocal;
-        String cookieSameSite = isLocal ? "Lax" : "None";
-
-        String cookieHeader = "token=; Path=/; HttpOnly; Max-Age=0; SameSite=" + cookieSameSite;
-        if (cookieSecure) {
-            cookieHeader += "; Secure";
-        }
-        response.addHeader("Set-Cookie", cookieHeader);
+        jwtUtils.clearJwtCookie(response, allowedOrigins);
 
         return ResponseEntity.ok(new MessageResponse(true, "Logged out successfully!"));
     }
@@ -264,15 +248,7 @@ public class AuthController {
 
         userRepository.deleteById(userId);
 
-        boolean isLocal = allowedOrigins == null || allowedOrigins.contains("localhost") || allowedOrigins.contains("127.0.0.1");
-        boolean cookieSecure = !isLocal;
-        String cookieSameSite = isLocal ? "Lax" : "None";
-
-        String cookieHeader = "token=; Path=/; HttpOnly; Max-Age=0; SameSite=" + cookieSameSite;
-        if (cookieSecure) {
-            cookieHeader += "; Secure";
-        }
-        response.addHeader("Set-Cookie", cookieHeader);
+        jwtUtils.clearJwtCookie(response, allowedOrigins);
 
         return ResponseEntity.ok(new MessageResponse(true, "Account deleted successfully!"));
     }

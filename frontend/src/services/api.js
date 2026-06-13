@@ -1,8 +1,15 @@
 import axios from "axios";
 
+/**
+ * Centrally configured API base URL, derived from env configuration.
+ */
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
-// Configured Axios instance
+/**
+ * Centrally configured Axios instance.
+ * Automatically handles cross-origin credentials (cookies) and injects base URL.
+ * Custom thunks and services should use this instance to avoid boilerplate setup.
+ */
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,

@@ -11,6 +11,7 @@ import org.springframework.web.util.WebUtils;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.security.Key;
 import java.util.Date;
 
@@ -31,6 +32,36 @@ public class JwtUtils {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Enforce security standards: sets an HttpOnly JWT cookie with local/production specific options.
+     */
+    public void addJwtCookie(HttpServletResponse response, String jwt, String allowedOrigins) {
+        boolean isLocal = allowedOrigins == null || allowedOrigins.contains("localhost") || allowedOrigins.contains("127.0.0.1");
+        boolean cookieSecure = !isLocal;
+        String cookieSameSite = isLocal ? "Lax" : "None";
+
+        String cookieHeader = "token=" + jwt + "; Path=/; HttpOnly; Max-Age=86400; SameSite=" + cookieSameSite;
+        if (cookieSecure) {
+            cookieHeader += "; Secure";
+        }
+        response.addHeader("Set-Cookie", cookieHeader);
+    }
+
+    /**
+     * Clears the HTTP-only JWT cookie upon logout or account deletion.
+     */
+    public void clearJwtCookie(HttpServletResponse response, String allowedOrigins) {
+        boolean isLocal = allowedOrigins == null || allowedOrigins.contains("localhost") || allowedOrigins.contains("127.0.0.1");
+        boolean cookieSecure = !isLocal;
+        String cookieSameSite = isLocal ? "Lax" : "None";
+
+        String cookieHeader = "token=; Path=/; HttpOnly; Max-Age=0; SameSite=" + cookieSameSite;
+        if (cookieSecure) {
+            cookieHeader += "; Secure";
+        }
+        response.addHeader("Set-Cookie", cookieHeader);
     }
 
     public String generateJwtToken(Authentication authentication) {
