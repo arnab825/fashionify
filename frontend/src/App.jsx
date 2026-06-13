@@ -1,42 +1,61 @@
-import { Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { Route, Routes } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import AuthLayout from "./components/auth/layout";
-import AdminLogin from "./pages/admin-view/admin-login";
-import AdminLayout from "./components/admin-view/layout";
-import AdminDashboard from "./pages/admin-view/dashboard";
-import AdminProducts from "./pages/admin-view/products";
-import AdminOrders from "./pages/admin-view/orders";
-import AdminFeatures from "./pages/admin-view/features";
-import AdminCoupons from "./pages/admin-view/coupons";
-import AdminCollections from "./pages/admin-view/collections";
-import AdminMessages from "./pages/admin-view/messages";
-import ShoppingLayout from "./components/shopping-view/layout";
-import NotFound from "./pages/not-found";
-import ShoppingHome from "./pages/shopping-view/home";
-import ShoppingListing from "./pages/shopping-view/listing";
-import ShoppingCheckout from "./pages/shopping-view/checkout";
-import ShoppingProductDetails from "./pages/shopping-view/product-details";
-import ShoppingAccount from "./pages/shopping-view/account";
-import ShoppingCollectionDetails from "./pages/shopping-view/collection-details";
-import CheckAuth from "./components/common/check-auth";
-import UnauthPage from "./pages/unauth-page";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+
+// Layout & core auth components (static import to keep container framing immediate)
+import AuthLayout from "./components/auth/layout";
+import AdminLayout from "./components/admin-view/layout";
+import ShoppingLayout from "./components/shopping-view/layout";
+import CheckAuth from "./components/common/check-auth";
 import { checkAuth } from "./store/auth-slice";
+
+// UI Components
 import { Skeleton } from "@/components/ui/skeleton";
-import PaypalReturnPage from "./pages/shopping-view/paypal-return";
-import PaymentSuccessPage from "./pages/shopping-view/payment-success";
-import SearchProducts from "./pages/shopping-view/search";
-import ShoppingAbout from "./pages/shopping-view/about";
-import ShoppingContact from "./pages/shopping-view/contact";
-import ShoppingWishlist from "./pages/shopping-view/wishlist";
+
+// Lazy-loaded page components for bundle splitting
+const AdminLogin = lazy(() => import("./pages/admin-view/admin-login"));
+const AdminDashboard = lazy(() => import("./pages/admin-view/dashboard"));
+const AdminProducts = lazy(() => import("./pages/admin-view/products"));
+const AdminOrders = lazy(() => import("./pages/admin-view/orders"));
+const AdminFeatures = lazy(() => import("./pages/admin-view/features"));
+const AdminCoupons = lazy(() => import("./pages/admin-view/coupons"));
+const AdminCollections = lazy(() => import("./pages/admin-view/collections"));
+const AdminMessages = lazy(() => import("./pages/admin-view/messages"));
+
+const ShoppingHome = lazy(() => import("./pages/shopping-view/home"));
+const ShoppingListing = lazy(() => import("./pages/shopping-view/listing"));
+const ShoppingCheckout = lazy(() => import("./pages/shopping-view/checkout"));
+const ShoppingProductDetails = lazy(() => import("./pages/shopping-view/product-details"));
+const ShoppingAccount = lazy(() => import("./pages/shopping-view/account"));
+const ShoppingCollectionDetails = lazy(() => import("./pages/shopping-view/collection-details"));
+const PaypalReturnPage = lazy(() => import("./pages/shopping-view/paypal-return"));
+const PaymentSuccessPage = lazy(() => import("./pages/shopping-view/payment-success"));
+const SearchProducts = lazy(() => import("./pages/shopping-view/search"));
+const ShoppingAbout = lazy(() => import("./pages/shopping-view/about"));
+const ShoppingContact = lazy(() => import("./pages/shopping-view/contact"));
+const ShoppingWishlist = lazy(() => import("./pages/shopping-view/wishlist"));
+
+const UnauthPage = lazy(() => import("./pages/unauth-page"));
+const NotFound = lazy(() => import("./pages/not-found"));
+
+/**
+ * Loading fallback skeleton UI matching the general layouts.
+ */
+function LoadingFallback() {
+  return (
+    <div className="flex-1 p-6 md:p-10 flex flex-col gap-6 max-w-7xl mx-auto w-full mt-4">
+      <Skeleton className="h-12 w-[250px] rounded-sm" />
+      <Skeleton className="h-[350px] w-full rounded-sm" />
+    </div>
+  );
+}
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
-  const location = useLocation();
 
   useEffect(() => {
     dispatch(checkAuth());
@@ -60,70 +79,72 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <AnimatePresence mode="wait">
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}></CheckAuth>
-          }
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <CheckAuth isAuthenticated={isAuthenticated} user={user}></CheckAuth>
+              }
+            />
 
-        {/* Admin auth — dedicated page (not modal) */}
-        <Route
-          path="/admin-auth"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <AuthLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="login" element={<AdminLogin />} />
-        </Route>
+            {/* Admin auth — dedicated page (not modal) */}
+            <Route
+              path="/admin-auth"
+              element={
+                <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                  <AuthLayout />
+                </CheckAuth>
+              }
+            >
+              <Route path="login" element={<AdminLogin />} />
+            </Route>
 
-        {/* Admin panel */}
-        <Route
-          path="/admin"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <AdminLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="products"  element={<AdminProducts />} />
-          <Route path="orders"    element={<AdminOrders />} />
-          <Route path="features"  element={<AdminFeatures />} />
-          <Route path="coupons"   element={<AdminCoupons />} />
-          <Route path="collections"   element={<AdminCollections />} />
-          <Route path="messages"  element={<AdminMessages />} />
-        </Route>
+            {/* Admin panel */}
+            <Route
+              path="/admin"
+              element={
+                <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                  <AdminLayout />
+                </CheckAuth>
+              }
+            >
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="products"  element={<AdminProducts />} />
+              <Route path="orders"    element={<AdminOrders />} />
+              <Route path="features"  element={<AdminFeatures />} />
+              <Route path="coupons"   element={<AdminCoupons />} />
+              <Route path="collections"   element={<AdminCollections />} />
+              <Route path="messages"  element={<AdminMessages />} />
+            </Route>
 
-        {/* Shopping — public product pages, protected account/checkout */}
-        <Route
-          path="/shop"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <ShoppingLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="home"            element={<ShoppingHome />} />
-          <Route path="listing"         element={<ShoppingListing />} />
-          <Route path="product/:id"     element={<ShoppingProductDetails />} />
-          <Route path="search"          element={<SearchProducts />} />
-          <Route path="about"           element={<ShoppingAbout />} />
-          <Route path="contact"         element={<ShoppingContact />} />
-          <Route path="checkout"        element={<ShoppingCheckout />} />
-          <Route path="account"         element={<ShoppingAccount />} />
-          <Route path="collection/:id"      element={<ShoppingCollectionDetails />} />
-          <Route path="wishlist"        element={<ShoppingWishlist />} />
-          <Route path="paypal-return"   element={<PaypalReturnPage />} />
-          <Route path="payment-success" element={<PaymentSuccessPage />} />
-        </Route>
+            {/* Shopping — public product pages, protected account/checkout */}
+            <Route
+              path="/shop"
+              element={
+                <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                  <ShoppingLayout />
+                </CheckAuth>
+              }
+            >
+              <Route path="home"            element={<ShoppingHome />} />
+              <Route path="listing"         element={<ShoppingListing />} />
+              <Route path="product/:id"     element={<ShoppingProductDetails />} />
+              <Route path="search"          element={<SearchProducts />} />
+              <Route path="about"           element={<ShoppingAbout />} />
+              <Route path="contact"         element={<ShoppingContact />} />
+              <Route path="checkout"        element={<ShoppingCheckout />} />
+              <Route path="account"         element={<ShoppingAccount />} />
+              <Route path="collection/:id"      element={<ShoppingCollectionDetails />} />
+              <Route path="wishlist"        element={<ShoppingWishlist />} />
+              <Route path="paypal-return"   element={<PaypalReturnPage />} />
+              <Route path="payment-success" element={<PaymentSuccessPage />} />
+            </Route>
 
-        <Route path="/unauth-page" element={<UnauthPage />} />
-        <Route path="*"            element={<NotFound />} />
-      </Routes>
+            <Route path="/unauth-page" element={<UnauthPage />} />
+            <Route path="*"            element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </AnimatePresence>
     </div>
   );

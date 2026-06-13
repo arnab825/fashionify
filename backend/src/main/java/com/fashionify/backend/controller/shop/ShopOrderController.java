@@ -3,6 +3,7 @@ package com.fashionify.backend.controller.shop;
 import com.fashionify.backend.entity.Cart;
 import com.fashionify.backend.entity.Order;
 import com.fashionify.backend.entity.OrderItem;
+import org.springframework.cache.annotation.CacheEvict;
 import com.fashionify.backend.entity.User;
 import com.fashionify.backend.repository.CartRepository;
 import com.fashionify.backend.repository.OrderRepository;
@@ -135,6 +136,7 @@ public class ShopOrderController {
      * In Razorpay mode this would verify the payment signature.
      */
     @PostMapping("/confirm-simulated")
+    @CacheEvict(value = "shopProducts", allEntries = true)
     public ResponseEntity<?> confirmSimulatedOrder(@RequestBody Map<String, Object> payload) {
         Object orderIdObj = payload.get("orderId");
         if (orderIdObj == null) {

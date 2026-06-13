@@ -12,8 +12,10 @@ import java.util.List;
 @Entity
 @Table(name = "products", indexes = {
     @Index(name = "idx_product_category", columnList = "category"),
-    @Index(name = "idx_product_brand", columnList = "brand")
+    @Index(name = "idx_product_brand", columnList = "brand"),
+    @Index(name = "idx_product_price", columnList = "price")
 })
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

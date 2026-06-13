@@ -3,6 +3,7 @@ package com.fashionify.backend.controller.admin;
 import com.fashionify.backend.entity.Product;
 import com.fashionify.backend.entity.ProductSizeVariant;
 import com.fashionify.backend.repository.ProductRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import com.fashionify.backend.util.ProductMapper;
 import com.fashionify.backend.repository.ProductSizeVariantRepository;
 import com.fashionify.backend.repository.WaitlistRepository;
@@ -77,6 +78,7 @@ public class AdminProductController {
 
     // ── Add Product ──────────────────────────────────────────────────────────
     @PostMapping("/add")
+    @CacheEvict(value = "shopProducts", allEntries = true)
     public ResponseEntity<?> addProduct(@RequestBody Map<String, Object> payload) {
         // Validate tags before persisting — minimum 1, maximum 5
         ResponseEntity<?> tagError = validateTagsInPayload(payload);
@@ -109,6 +111,7 @@ public class AdminProductController {
     // ── Edit Product ─────────────────────────────────────────────────────────
     @SuppressWarnings("unchecked")
     @PutMapping("/edit/{id}")
+    @CacheEvict(value = "shopProducts", allEntries = true)
     public ResponseEntity<?> editProduct(@PathVariable Long id,
             @RequestBody Map<String, Object> payload) {
         // Validate tags before persisting — minimum 1, maximum 5
@@ -158,6 +161,7 @@ public class AdminProductController {
     // ── Delete Product ────────────────────────────────────────────────────────
     @Transactional
     @DeleteMapping("/delete/{id}")
+    @CacheEvict(value = "shopProducts", allEntries = true)
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         if (productRepository.existsById(id)) {
             // Remove from carts

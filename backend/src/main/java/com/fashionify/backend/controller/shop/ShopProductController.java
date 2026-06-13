@@ -4,6 +4,7 @@ import com.fashionify.backend.entity.Product;
 import com.fashionify.backend.repository.ProductRepository;
 import com.fashionify.backend.util.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class ShopProductController {
      * Returns: { products, currentPage, totalPages, totalProducts }
      */
     @GetMapping("/get")
+    @Cacheable(value = "shopProducts", key = "{#category, #brand, #priceRanges, #inStockSize, #sortBy, #page, #size}")
     public ResponseEntity<?> getFilteredProducts(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String brand,
@@ -117,6 +119,7 @@ public class ShopProductController {
     }
 
     @GetMapping("/get/{id}")
+    @Cacheable(value = "shopProducts", key = "'details-' + #id")
     public ResponseEntity<?> getProductDetails(@PathVariable Long id) {
         return productRepository.findById(id)
                 .map(product -> ResponseEntity.ok(Map.of("success", true, "data", ProductMapper.toResponseMap(product))))
@@ -124,6 +127,7 @@ public class ShopProductController {
     }
 
     @GetMapping("/price-range")
+    @Cacheable(value = "shopProducts", key = "'price-range'")
     public ResponseEntity<?> getPriceRange() {
         List<Product> products = productRepository.findAll();
         
