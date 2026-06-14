@@ -77,7 +77,7 @@ sequenceDiagram
     autonumber
     actor User as User Browser (Frontend)
     participant Server as Spring Boot API (Backend)
-    database DB as MySQL Database
+    participant DB as MySQL Database
     participant ThirdParty as External APIs (Cloudinary, Brevo, Razorpay)
 
     User->>Server: 1. Send Request (e.g., Get Product List)

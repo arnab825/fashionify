@@ -50,23 +50,3 @@ To maintain a secure repository going forward:
 
 > [!IMPORTANT]
 > **Conclusion**: The documentation suite has been fully audited and is **100% SAFE** to be published to a public GitHub repository. No private keys, secrets, credentials, or internal server configurations are exposed.
-
----
-
-## 6. Final Folder Structure
-
-Here is the finalized directory layout of the documentation suite:
-
-```text
-fashionify/
-├── README.md
-└── docs/
-    ├── PROJECT_OVERVIEW.md
-    ├── ARCHITECTURE_GUIDE.md
-    ├── FEATURE_FLOWS.md
-    ├── API_GUIDE.md
-    ├── DATABASE_GUIDE.md
-    ├── BEGINNER_GUIDE.md
-    ├── CONTRIBUTING_GUIDE.md
-    └── PUBLICATION_SAFETY_AUDIT.md
-```

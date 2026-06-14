@@ -157,7 +157,7 @@ sequenceDiagram
     autonumber
     actor Browser as Frontend React UI
     participant Backend as Spring Boot API
-    database DB as MySQL Database
+    participant DB as MySQL Database
 
     Browser->>Backend: 1. Click "+" button: POST /api/shop/cart/update-quantity
     activate Backend
