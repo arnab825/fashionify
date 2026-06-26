@@ -1,3 +1,19 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: AdminAnalyticsController.java
+ * Purpose: Spring Boot REST Controller handling incoming HTTP requests and routing.
+ * Functions/Methods: 0
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 package com.fashionify.backend.controller.admin;
 
 import com.fashionify.backend.entity.Order;
@@ -6,9 +22,9 @@ import com.fashionify.backend.repository.UserRepository;
 import com.fashionify.backend.repository.WishlistRepository;
 import com.fashionify.backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,9 +49,10 @@ public class AdminAnalyticsController {
     private ProductRepository productRepository;
 
     @GetMapping
+    @Cacheable(value = "analytics", key = "#start.toString() + '-' + #end.toString()")
     public ResponseEntity<?> getAnalytics(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate end
     ) {
         LocalDateTime startDt = start.atStartOfDay();
         LocalDateTime endDt = end.atTime(23, 59, 59);

@@ -1,3 +1,19 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: check-auth.jsx
+ * Purpose: Feature-specific React component to encapsulate UI logic.
+ * Functions/Methods: 3
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 import { Navigate, useLocation } from "react-router-dom";
 
 // Public shop routes — browsable without authentication
@@ -24,11 +40,10 @@ function CheckAuth({ isAuthenticated, user, children }) {
     return <Navigate to="/shop/home" replace />;
   }
 
-  // Admin routes — must be authenticated admin, otherwise redirect to shop home
+  // Admin routes — must be authenticated admin
   if (pathname.startsWith("/admin")) {
-    if (!isAuthenticated || user?.role !== "admin") {
-      return <Navigate to="/shop/home" replace />;
-    }
+    if (!isAuthenticated) return <Navigate to="/shop/home" replace />;
+    if (user?.role !== "admin") return <Navigate to="/unauth-page" replace />;
     return <>{children}</>;
   }
 

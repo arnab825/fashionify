@@ -1,3 +1,19 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: api.js
+ * Purpose: API service helper to make external network requests.
+ * Functions/Methods: 19
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 import axios from "axios";
 
 /**
@@ -38,6 +54,6 @@ export const createCollection = (payload) => api.post("/api/collections", payloa
 export const deleteCollection = (id) => api.delete(`/api/collections/${id}`);
 export const uploadProductImage = (data) => api.post("/api/admin/products/upload-image", data);
 export const uploadCollectionImage = (data) => api.post("/api/collections/upload-image", data);
-export const uploadImage = (url, data) => api.post(url, data);
+export const uploadImage = (url, data, config) => api.post(url, data, config);
 
 export default api;

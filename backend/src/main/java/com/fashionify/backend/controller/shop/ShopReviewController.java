@@ -1,3 +1,19 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: ShopReviewController.java
+ * Purpose: Spring Boot REST Controller handling incoming HTTP requests and routing.
+ * Functions/Methods: 0
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 package com.fashionify.backend.controller.shop;
 
 import com.fashionify.backend.entity.Product;
@@ -10,6 +26,8 @@ import com.fashionify.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -62,6 +80,7 @@ public class ShopReviewController {
      * Only allowed if user has a delivered order for this product.
      */
     @PostMapping("/add")
+    @CacheEvict(value = {"reviews", "latestReviews", "shopProducts", "adminProducts", "collections"}, allEntries = true)
     public ResponseEntity<?> addReview(@RequestBody Map<String, String> payload) {
         Long productId = Long.parseLong(payload.get("productId"));
         Long userId = Long.parseLong(payload.get("userId"));
@@ -119,6 +138,7 @@ public class ShopReviewController {
     }
 
     @GetMapping("/{productId}")
+    @Cacheable(value = "reviews", key = "#productId")
     public ResponseEntity<?> getProductReviews(@PathVariable Long productId) {
         List<Map<String, Object>> reviewDtos = reviewRepository.findByProductId(productId)
                 .stream()
@@ -128,6 +148,7 @@ public class ShopReviewController {
     }
 
     @GetMapping("/latest")
+    @Cacheable("latestReviews")
     public ResponseEntity<?> getLatestReviews() {
         // Fetch top 3 latest reviews. A simple approach is sorting the list, 
         // but for efficiency it should be a custom query. We'll sort in-memory for this scale.

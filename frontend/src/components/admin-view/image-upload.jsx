@@ -1,7 +1,23 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: image-upload.jsx
+ * Purpose: Feature-specific React component to encapsulate UI logic.
+ * Functions/Methods: 9
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 import { FileIcon, UploadCloudIcon, XIcon, PlusIcon } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { uploadImage } from "@/services/api";
 import { Skeleton } from "../ui/skeleton";
@@ -27,11 +43,18 @@ function ProductImageUpload({
   const inputRef = useRef(null);
   const { toast } = useToast();
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   async function uploadImageToCloudinary(file) {
     try {
       const data = new FormData();
       data.append("my_file", file);
-      const response = await uploadImage(uploadUrl, data);
+      const response = await uploadImage(uploadUrl, data, {
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
+      });
       if (response?.data?.success) {
         return response.data.result.url;
       }
@@ -65,6 +88,7 @@ function ProductImageUpload({
       validFiles.push(file);
     }
 
+    setUploadProgress(0);
     setImageLoadingState(true);
     const newFiles = [...(imageFiles || []), ...validFiles];
     setImageFiles(newFiles);
@@ -73,6 +97,7 @@ function ProductImageUpload({
     const validUrls = urls.filter(Boolean);
     setUploadedImageUrls((prev) => [...(prev || []), ...validUrls]);
     setImageLoadingState(false);
+    setUploadProgress(0);
 
     // Clear input so same file can be re-selected
     if (inputRef.current) inputRef.current.value = "";
@@ -209,10 +234,21 @@ function ProductImageUpload({
         </div>
       )}
 
-      {imageLoadingState && currentUrls.length > 0 && (
-        <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          Uploading image...
+      {imageLoadingState && (
+        <div className="mt-4 p-4 bg-muted/30 rounded-xl border border-border space-y-3">
+          <div className="flex items-center justify-between text-sm font-medium">
+            <span className="flex items-center gap-2 text-foreground">
+              <UploadCloudIcon className="w-4 h-4 animate-bounce text-primary" />
+              Uploading...
+            </span>
+            <span className="text-muted-foreground font-bold">{uploadProgress}%</span>
+          </div>
+          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary transition-all duration-300 ease-out" 
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
         </div>
       )}
     </div>

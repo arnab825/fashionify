@@ -1,3 +1,19 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: OrderRepository.java
+ * Purpose: Spring Data JPA Repository for database CRUD operations.
+ * Functions/Methods: 0
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 package com.fashionify.backend.repository;
 
 import com.fashionify.backend.entity.Order;
@@ -13,6 +29,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByUserId(Long userId);
     void deleteByUserId(Long userId);
+
+    @Query("""
+        SELECT o FROM Order o
+        JOIN o.orderItems oi
+        WHERE oi.productId = :productId
+        AND o.orderStatus NOT IN ('delivered', 'CANCELLED')
+        """)
+    List<Order> findActiveOrdersByProductId(@Param("productId") String productId);
 
     // Used by verified-purchase rating check
     @Query("""

@@ -1,10 +1,25 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: App.jsx
+ * Purpose: Core application module.
+ * Functions/Methods: 24
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 import { lazy, Suspense, useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 
 // Layout & core auth components (static import to keep container framing immediate)
-import AuthLayout from "./components/auth/layout";
 import AdminLayout from "./components/admin-view/layout";
 import ShoppingLayout from "./components/shopping-view/layout";
 import CheckAuth from "./components/common/check-auth";
@@ -13,8 +28,14 @@ import { checkAuth } from "./store/auth-slice";
 // UI Components
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Lazy-loaded page components for bundle splitting
-
+// ============================================================================
+// LAZY LOADING FOR PERFORMANCE
+// ============================================================================
+// By using React.lazy(), we split our application into smaller chunks.
+// Instead of downloading the entire application at once, the browser only
+// downloads the specific page the user is trying to view. This massively
+// improves initial load times!
+// ============================================================================
 const AdminDashboard = lazy(() => import("./pages/admin-view/dashboard"));
 const AdminProducts = lazy(() => import("./pages/admin-view/products"));
 const AdminOrders = lazy(() => import("./pages/admin-view/orders"));
@@ -29,7 +50,6 @@ const ShoppingCheckout = lazy(() => import("./pages/shopping-view/checkout"));
 const ShoppingProductDetails = lazy(() => import("./pages/shopping-view/product-details"));
 const ShoppingAccount = lazy(() => import("./pages/shopping-view/account"));
 const ShoppingCollectionDetails = lazy(() => import("./pages/shopping-view/collection-details"));
-const PaypalReturnPage = lazy(() => import("./pages/shopping-view/paypal-return"));
 const PaymentSuccessPage = lazy(() => import("./pages/shopping-view/payment-success"));
 const SearchProducts = lazy(() => import("./pages/shopping-view/search"));
 const ShoppingAbout = lazy(() => import("./pages/shopping-view/about"));
@@ -51,7 +71,12 @@ function LoadingFallback() {
   );
 }
 
-// Public shop routes that should render immediately without waiting for auth
+// ============================================================================
+// PUBLIC ROUTES CONFIGURATION
+// ============================================================================
+// These routes do not require the user to be logged in. By defining them here,
+// we can skip showing a loading skeleton while the app checks authentication.
+// ============================================================================
 const PUBLIC_INSTANT_PATHS = [
   "/shop/home",
   "/shop/listing",
@@ -93,7 +118,9 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+      {/* AnimatePresence allows components to animate out when they are removed from the DOM */}
       <AnimatePresence mode="wait">
+        {/* Suspense is required when using React.lazy. It shows the fallback while the component is downloading */}
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route
@@ -102,7 +129,6 @@ function App() {
                 <CheckAuth isAuthenticated={isAuthenticated} user={user}></CheckAuth>
               }
             />
-
 
 
             {/* Admin panel */}
@@ -142,7 +168,6 @@ function App() {
               <Route path="account"         element={<ShoppingAccount />} />
               <Route path="collection/:id"      element={<ShoppingCollectionDetails />} />
               <Route path="wishlist"        element={<ShoppingWishlist />} />
-              <Route path="paypal-return"   element={<PaypalReturnPage />} />
               <Route path="payment-success" element={<PaymentSuccessPage />} />
             </Route>
 

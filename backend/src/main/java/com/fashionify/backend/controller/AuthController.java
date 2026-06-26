@@ -1,3 +1,19 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: AuthController.java
+ * Purpose: Spring Boot REST Controller handling incoming HTTP requests and routing.
+ * Functions/Methods: 0
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 package com.fashionify.backend.controller;
 
 import com.fashionify.backend.dto.JwtResponse;
@@ -210,6 +226,7 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password/initiate")
+    @Transactional
     public ResponseEntity<?> initiateForgotPassword(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
         if (email == null || email.isBlank()) {

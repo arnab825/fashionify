@@ -1,3 +1,19 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: order-details.jsx
+ * Purpose: Feature-specific React component to encapsulate UI logic.
+ * Functions/Methods: 5
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import CommonForm from "../common/form";
@@ -12,6 +28,7 @@ import {
 import { fetchAllProducts } from "@/store/admin/products-slice";
 import { useToast } from "../ui/use-toast";
 import { Calendar, CreditCard, Package, MapPin, ClipboardList } from "lucide-react";
+import ORDER_STATUSES from "@/config/order-status.json";
 
 const initialFormData = {
   status: "",
@@ -239,13 +256,7 @@ function AdminOrderDetailsView({ orderDetails }) {
                     label: "Select Status",
                     name: "status",
                     componentType: "select",
-                    options: [
-                      { id: "pending", label: "Pending" },
-                      { id: "inProcess", label: "In Process" },
-                      { id: "inShipping", label: "In Shipping" },
-                      { id: "delivered", label: "Delivered" },
-                      { id: "rejected", label: "Rejected" },
-                    ],
+                    options: ORDER_STATUSES.filter(status => status.adminSelectable),
                   },
                 ]}
                 formData={formData}

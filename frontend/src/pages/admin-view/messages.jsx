@@ -1,3 +1,19 @@
+/**
+ * ============================================================================
+ * File Purpose Documentation
+ * ============================================================================
+ * File: messages.jsx
+ * Purpose: Full page React view rendering a distinct route in the application.
+ * Functions/Methods: 8
+ * 
+ * Description: 
+ * This file is part of the Fashionify e-commerce platform. It encapsulates 
+ * specific logic related to its domain (Frontend UI/State or Backend Logic).
+ * Beginners should read through the functions below to understand how data 
+ * flows through this specific module.
+ * ============================================================================
+ */
+
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector }      from "react-redux";
 import {
@@ -21,6 +37,8 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { SkeletonRepeater } from "@/components/ui/skeleton";
+import { ConfirmDeleteDialog } from "@/components/common/confirm-delete-dialog";
 
 // ── Filter tab definitions ────────────────────────────────────────────────────
 const FILTER_TABS = [
@@ -189,6 +207,7 @@ function AdminMessages() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery,  setSearchQuery]  = useState("");
   const [sortOrder,    setSortOrder]    = useState("newest"); // "newest" | "oldest"
+  const [messageToDelete, setMessageToDelete] = useState(null);
 
   // Fetch messages when filter changes
   useEffect(() => {
@@ -238,11 +257,16 @@ function AdminMessages() {
     });
   }
 
-  function handleDelete(id) {
-    if (!window.confirm("Delete this message? This cannot be undone.")) return;
-    dispatch(deleteMessage(id)).then(() => {
+  function handleDeleteClick(id) {
+    setMessageToDelete(id);
+  }
+
+  function confirmDelete() {
+    if (!messageToDelete) return;
+    dispatch(deleteMessage(messageToDelete)).then(() => {
       toast({ title: "Message deleted" });
       dispatch(fetchUnreadCount());
+      setMessageToDelete(null);
     });
   }
 
@@ -337,12 +361,7 @@ function AdminMessages() {
       {isLoading ? (
         // Skeleton rows
         <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="h-16 border-2 border-border rounded-sm bg-muted/30 animate-pulse"
-            />
-          ))}
+          <SkeletonRepeater count={4} className="h-16 border-2 border-border rounded-sm bg-muted/30" />
         </div>
       ) : filtered.length > 0 ? (
         <div className="space-y-3">
@@ -352,7 +371,7 @@ function AdminMessages() {
               msg={msg}
               onRead={handleRead}
               onResolve={handleResolve}
-              onDelete={handleDelete}
+              onDelete={handleDeleteClick}
             />
           ))}
         </div>
@@ -374,6 +393,14 @@ function AdminMessages() {
           </p>
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        isOpen={!!messageToDelete}
+        onClose={() => setMessageToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Delete Message?"
+        warningText="Deleting this message will permanently remove it from your inbox. This action cannot be undone."
+      />
     </div>
   );
 }
