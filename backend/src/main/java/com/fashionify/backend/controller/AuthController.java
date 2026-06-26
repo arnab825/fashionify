@@ -12,6 +12,9 @@ import com.fashionify.backend.repository.CartRepository;
 import com.fashionify.backend.repository.OrderRepository;
 import com.fashionify.backend.repository.ReviewRepository;
 import com.fashionify.backend.repository.WishlistRepository;
+import com.fashionify.backend.entity.PasswordReset;
+import com.fashionify.backend.repository.PasswordResetRepository;
+import com.fashionify.backend.service.EmailService;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -60,6 +63,14 @@ public class AuthController {
 
     @Autowired
     WishlistRepository wishlistRepository;
+
+    @Autowired
+    PasswordResetRepository passwordResetRepository;
+
+    @Autowired
+    EmailService emailService;
+
+    private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
 
     // Legacy /register endpoint removed to enforce OTP signup flow
 
@@ -196,6 +207,104 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse(true, "Password updated successfully!"));
+    }
+
+    @PostMapping("/forgot-password/initiate")
+    public ResponseEntity<?> initiateForgotPassword(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "Email is required."));
+        }
+
+        String targetEmail = email.trim().toLowerCase();
+        if (!userRepository.existsByEmail(targetEmail)) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "No account found with this email."));
+        }
+
+        // Purge old tokens
+        passwordResetRepository.deleteAllByEmail(targetEmail);
+
+        // Generate 6-digit code
+        String otp = String.format("%06d", SECURE_RANDOM.nextInt(1000000));
+
+        // Save new code
+        PasswordReset reset = PasswordReset.builder()
+                .email(targetEmail)
+                .otpCode(otp)
+                .build();
+        passwordResetRepository.save(reset);
+
+        // Send email
+        String subject = "Fashionify — Password Reset Verification Code";
+        String body = "You requested to reset your password.\n\n" +
+                "Your verification code is:\n\n" +
+                "  " + otp + "\n\n" +
+                "This code expires in 5 minutes.\n\n" +
+                "If you did not request this, please ignore this email.\n\n" +
+                "— The Fashionify Team";
+        try {
+            emailService.sendSimpleEmail(targetEmail, subject, body);
+        } catch (Exception e) {
+            System.out.println("Failed to send password reset email to " + targetEmail + ": " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(new MessageResponse(true, "Verification code sent to your email."));
+    }
+
+    @PostMapping("/forgot-password/reset")
+    @Transactional
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String otp = payload.get("otp");
+        String newPassword = payload.get("newPassword");
+        String confirmPassword = payload.get("confirmPassword");
+
+        if (email == null || otp == null || newPassword == null || confirmPassword == null ||
+            email.isBlank() || otp.isBlank() || newPassword.isBlank() || confirmPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "All fields are required."));
+        }
+
+        String targetEmail = email.trim().toLowerCase();
+        
+        if (!newPassword.equals(confirmPassword)) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "Passwords do not match."));
+        }
+
+        // Check password requirements
+        if (newPassword.length() < 8
+                || !newPassword.matches(".*[A-Z].*")
+                || !newPassword.matches(".*[a-z].*")
+                || !newPassword.matches(".*[0-9].*")
+                || !newPassword.matches(".*[^A-Za-z0-9].*")) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false,
+                    "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."));
+        }
+
+        PasswordReset pending = passwordResetRepository.findTopByEmailOrderByCreatedAtDesc(targetEmail).orElse(null);
+        if (pending == null) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "No verification code found. Please request a new code."));
+        }
+
+        if (pending.isExpired()) {
+            passwordResetRepository.deleteAllByEmail(targetEmail);
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "Verification code has expired."));
+        }
+
+        if (!pending.getOtpCode().equals(otp.trim())) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "Incorrect verification code."));
+        }
+
+        User user = userRepository.findByEmail(targetEmail).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "User not found."));
+        }
+
+        user.setPassword(encoder.encode(newPassword));
+        userRepository.save(user);
+
+        passwordResetRepository.deleteAllByEmail(targetEmail);
+
+        return ResponseEntity.ok(new MessageResponse(true, "Password has been reset successfully."));
     }
 
     @PutMapping("/update-profile")

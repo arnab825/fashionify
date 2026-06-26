@@ -51,8 +51,19 @@ function LoadingFallback() {
   );
 }
 
+// Public shop routes that should render immediately without waiting for auth
+const PUBLIC_INSTANT_PATHS = [
+  "/shop/home",
+  "/shop/listing",
+  "/shop/search",
+  "/shop/about",
+  "/shop/contact",
+  "/shop/product/",
+  "/shop/collection/",
+];
+
 function App() {
-  const { user, isAuthenticated, isLoading } = useSelector(
+  const { user, isAuthenticated, isLoading, isInitialized } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
@@ -61,7 +72,11 @@ function App() {
     dispatch(checkAuth());
   }, [dispatch]);
 
-  if (isLoading) return (
+  const pathname = window.location.pathname;
+  const isPublicRoute = PUBLIC_INSTANT_PATHS.some((p) => pathname.startsWith(p));
+
+  // Only block rendering with a skeleton if we're on a protected route AND haven't initialized yet
+  if (!isInitialized && !isPublicRoute) return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="h-16 w-full border-b-2 border-border bg-muted/20 animate-pulse" />
       <main className="flex-1 p-6 md:p-10 flex flex-col gap-6 max-w-7xl mx-auto w-full mt-4">
