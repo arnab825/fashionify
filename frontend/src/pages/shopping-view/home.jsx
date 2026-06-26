@@ -23,8 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchAllFilteredProducts,
-  fetchProductDetails,
+  fetchAllFilteredProducts
 } from "@/store/shop/products-slice";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { useNavigate } from "react-router-dom";
@@ -51,21 +50,96 @@ const brandsWithIcon = [
   { id: "h&m", label: "H&M", icon: ({ className }) => <span className="text-primary-foreground font-black text-xl">H&M</span> },
 ];
 
+const staticMockProducts = [
+  {
+    id: "mock1",
+    title: "Classic Cotton Crewneck Tee",
+    price: 29.99,
+    salePrice: 19.99,
+    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=500&auto=format&fit=crop",
+    category: "men",
+    brand: "Fashionify"
+  },
+  {
+    id: "mock2",
+    title: "Minimalist Linen Button-Down",
+    price: 49.99,
+    salePrice: null,
+    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=500&auto=format&fit=crop",
+    category: "men",
+    brand: "Zara"
+  },
+  {
+    id: "mock3",
+    title: "Elegant Floral Summer Dress",
+    price: 69.99,
+    salePrice: 49.99,
+    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=500&auto=format&fit=crop",
+    category: "women",
+    brand: "Zara"
+  },
+  {
+    id: "mock4",
+    title: "High-Waist Stretch Denim Jeans",
+    price: 59.99,
+    salePrice: null,
+    image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=500&auto=format&fit=crop",
+    category: "women",
+    brand: "Levi's"
+  },
+  {
+    id: "mock5",
+    title: "Playful Unisex Soft Cotton Hoodie",
+    price: 39.99,
+    salePrice: 29.99,
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=500&auto=format&fit=crop",
+    category: "kids",
+    brand: "Adidas"
+  },
+  {
+    id: "mock6",
+    title: "Iconic Running Sneakers",
+    price: 89.99,
+    salePrice: 79.99,
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=500&auto=format&fit=crop",
+    category: "footwear",
+    brand: "Nike"
+  },
+  {
+    id: "mock7",
+    title: "Classic Leather Everyday Carry Bag",
+    price: 119.99,
+    salePrice: null,
+    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=500&auto=format&fit=crop",
+    category: "accessories",
+    brand: "Puma"
+  },
+  {
+    id: "mock8",
+    title: "Casual Slip-On Summer Loafers",
+    price: 45.00,
+    salePrice: 34.99,
+    image: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?q=80&w=500&auto=format&fit=crop",
+    category: "footwear",
+    brand: "H&M"
+  }
+];
+
 const defaultSlides = [
-  { image: bannerOne },
-  { image: bannerTwo },
-  { image: bannerThree },
+  { image: bannerOne,  alt: "Fashion Banner 1" },
+  { image: bannerTwo,  alt: "Fashion Banner 2" },
+  { image: bannerThree, alt: "Fashion Banner 3" },
 ];
 
 function ShoppingHome() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { productList, productDetails } = useSelector(
+  const { productList } = useSelector(
     (state) => state.shopProducts
   );
   const { featureImageList } = useSelector((state) => state.commonFeature);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  const [mockProducts, setMockProducts] = useState([]);
+  const [mockProducts, setMockProducts] = useState(staticMockProducts);
   const [collections, setCollections] = useState([]);
   const [latestReviews, setLatestReviews] = useState([]);
 
@@ -195,24 +269,6 @@ function ShoppingHome() {
   useEffect(() => {
     dispatch(getFeatureImages());
   }, [dispatch]);
-
-  useEffect(() => {
-    fetch('https://fakestoreapi.com/products?limit=8')
-      .then(res => res.json())
-      .then(data => {
-        const mappedData = data.map(item => ({
-          id: item.id.toString(),
-          title: item.title,
-          price: item.price,
-          salePrice: null,
-          image: item.image,
-          category: item.category,
-          brand: 'Generic',
-        }));
-        setMockProducts(mappedData);
-      })
-      .catch(err => console.error("Failed to fetch mock data:", err));
-  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">

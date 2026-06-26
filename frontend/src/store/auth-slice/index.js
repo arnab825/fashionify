@@ -3,7 +3,8 @@ import api from "@/services/api";
 
 const initialState = {
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
+  isInitialized: false,
   user: null,
 };
 
@@ -177,11 +178,13 @@ const authSlice = createSlice({
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.isInitialized = true;
         state.user = action.payload.success ? { ...action.payload.user, avatar: sessionStorage.getItem("userAvatar") || null } : null;
         state.isAuthenticated = action.payload.success;
       })
       .addCase(checkAuth.rejected, (state, action) => {
         state.isLoading = false;
+        state.isInitialized = true;
         state.user = null;
         state.isAuthenticated = false;
       })

@@ -9,6 +9,7 @@ import { KeyRound } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import api from "@/services/api";
 
 /* ─── Password strength ────────────────────────────────────────────────── */
 const PASSWORD_RULES = [
@@ -65,6 +66,7 @@ function LoginForm({ onSwitchToRegister, onClose }) {
   const dispatch                      = useDispatch();
   const { toast }                     = useToast();
   const { isLoading }                 = useSelector((state) => state.auth);
+  const { switchMode }                = useAuthModal();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -104,9 +106,18 @@ function LoginForm({ onSwitchToRegister, onClose }) {
 
       {/* Password */}
       <div className="space-y-1.5">
-        <label className="text-sm font-bold text-foreground" htmlFor="modal-password">
-          Password
-        </label>
+        <div className="flex justify-between items-center">
+          <label className="text-sm font-bold text-foreground" htmlFor="modal-password">
+            Password
+          </label>
+          <button
+            type="button"
+            onClick={() => switchMode("forgot-password")}
+            className="text-xs font-bold text-primary hover:underline underline-offset-2"
+          >
+            Forgot Password?
+          </button>
+        </div>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
@@ -479,12 +490,250 @@ function AdminLoginForm({ onClose }) {
   );
 }
 
+/* ─── Forgot Password Form ────────────────────────────────────────────── */
+function ForgotPasswordForm({ onSwitchToLogin }) {
+  const [step, setStep] = useState(1); // 1 = request code, 2 = verify & reset
+  const [formData, setFormData] = useState({
+    email: "",
+    otp: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showStrength, setShowStrength] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const allRulesPassed = PASSWORD_RULES.every((r) => r.test(formData.newPassword));
+
+  async function handleInitiate(e) {
+    e.preventDefault();
+    if (!formData.email) {
+      toast({ title: "Please enter your email.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await api.post("/api/auth/forgot-password/initiate", { email: formData.email });
+      if (response.data.success) {
+        toast({ title: response.data.message || "Code sent to your email." });
+        setStep(2);
+      } else {
+        toast({ title: response.data.message || "Failed to send code.", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({
+        title: err.response?.data?.message || "Failed to send reset code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleReset(e) {
+    e.preventDefault();
+    if (!formData.otp || formData.otp.length !== 6) {
+      toast({ title: "Please enter a valid 6-digit verification code.", variant: "destructive" });
+      return;
+    }
+    if (!allRulesPassed) {
+      toast({ title: "Password doesn't meet requirements.", variant: "destructive" });
+      setShowStrength(true);
+      return;
+    }
+    if (formData.newPassword !== formData.confirmPassword) {
+      toast({ title: "Passwords do not match.", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post("/api/auth/forgot-password/reset", {
+        email: formData.email,
+        otp: formData.otp,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
+      });
+      if (response.data.success) {
+        toast({ title: response.data.message || "Password reset successfully!" });
+        onSwitchToLogin();
+      } else {
+        toast({ title: response.data.message || "Failed to reset password.", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({
+        title: err.response?.data?.message || "Failed to reset password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (step === 2) {
+    return (
+      <form onSubmit={handleReset} className="space-y-4">
+        <div className="text-center mb-4">
+          <p className="text-sm text-muted-foreground">We've sent a 6-digit verification code to</p>
+          <p className="font-bold">{formData.email}</p>
+        </div>
+
+        {/* Verification Code */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-bold text-foreground" htmlFor="reset-otp">
+            Verification Code
+          </label>
+          <div className="relative">
+            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none font-bold" />
+            <input
+              id="reset-otp"
+              type="text"
+              maxLength={6}
+              placeholder="Enter 6-digit Code"
+              value={formData.otp}
+              onChange={(e) => setFormData({ ...formData, otp: e.target.value.replace(/\D/g, '') })}
+              className="neu-input w-full pl-10 tracking-widest font-mono text-center"
+              required
+            />
+          </div>
+        </div>
+
+        {/* New Password */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-bold text-foreground" htmlFor="reset-new-password">
+            New Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              id="reset-new-password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Create a strong password"
+              value={formData.newPassword}
+              onChange={(e) => {
+                setFormData({ ...formData, newPassword: e.target.value });
+                setShowStrength(true);
+              }}
+              onFocus={() => setShowStrength(true)}
+              className="neu-input w-full pl-10 pr-10"
+              required
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {showStrength && <PasswordStrength password={formData.newPassword} />}
+        </div>
+
+        {/* Confirm Password */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-bold text-foreground" htmlFor="reset-confirm-password">
+            Confirm Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              id="reset-confirm-password"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm new password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              className="neu-input w-full pl-10 pr-10"
+              required
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="neu-btn-primary w-full py-3.5 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Resetting…" : (
+            <>Reset Password <CheckCircle2 className="h-4 w-4 ml-2 inline animate-pulse" /></>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStep(1)}
+          className="w-full text-sm text-center text-muted-foreground font-bold hover:text-primary transition-colors mt-2"
+        >
+          Go Back
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <form onSubmit={handleInitiate} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-sm font-bold text-foreground" htmlFor="reset-email">
+          Email Address
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <input
+            id="reset-email"
+            type="email"
+            placeholder="you@example.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="neu-input w-full pl-10"
+            required
+            autoComplete="email"
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="neu-btn-primary w-full py-3.5 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? "Sending…" : (
+          <>Send Verification Code <ArrowRight className="h-4 w-4 ml-2 inline" /></>
+        )}
+      </button>
+
+      <p className="text-sm text-center text-muted-foreground pt-2">
+        Remembered your password?{" "}
+        <button
+          type="button"
+          onClick={onSwitchToLogin}
+          className="font-bold text-primary hover:underline underline-offset-4"
+        >
+          Sign In
+        </button>
+      </p>
+    </form>
+  );
+}
+
 /* ─── Auth Modal Root ──────────────────────────────────────────────────── */
 export default function AuthModal() {
   const { isOpen, mode, closeAuthModal, switchMode } = useAuthModal();
 
   const isLogin = mode === "login";
   const isAdmin = mode === "admin";
+  const isForgotPassword = mode === "forgot-password";
   
   let title = "Welcome Back";
   let subtitle = "Sign in to access your wishlist, orders & more.";
@@ -492,6 +741,9 @@ export default function AuthModal() {
   if (isAdmin) {
     title = "Admin Portal";
     subtitle = "Sign in with your administrator credentials.";
+  } else if (isForgotPassword) {
+    title = "Reset Password";
+    subtitle = "Provide your email to receive a password reset verification code.";
   } else if (!isLogin) {
     title = "Create Account";
     subtitle = "Join Fashionify for exclusive deals and a premium experience.";
@@ -533,23 +785,25 @@ export default function AuthModal() {
           </div>
 
           {/* Mode toggle tabs */}
-          <div className="flex mt-4 border-2 border-border rounded-sm overflow-hidden"
-               style={{ boxShadow: "2px 2px 0px 0px hsl(var(--neu-black))" }}>
-            {["login", "register", "admin"].map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => switchMode(m)}
-                className={`flex-1 py-2 text-xs font-bold transition-all ${
-                  mode === m
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {m === "login" ? "Sign In" : m === "register" ? "Sign Up" : "Admin"}
-              </button>
-            ))}
-          </div>
+          {mode !== "forgot-password" && (
+            <div className="flex mt-4 border-2 border-border rounded-sm overflow-hidden"
+                 style={{ boxShadow: "2px 2px 0px 0px hsl(var(--neu-black))" }}>
+              {["login", "register", "admin"].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => switchMode(m)}
+                  className={`flex-1 py-2 text-xs font-bold transition-all ${
+                    mode === m
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {m === "login" ? "Sign In" : m === "register" ? "Sign Up" : "Admin"}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Form body */}
@@ -576,6 +830,9 @@ export default function AuthModal() {
               )}
               {isAdmin && (
                 <AdminLoginForm onClose={closeAuthModal} />
+              )}
+              {mode === "forgot-password" && (
+                <ForgotPasswordForm onSwitchToLogin={() => switchMode("login")} />
               )}
             </motion.div>
           </AnimatePresence>
