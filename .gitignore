@@ -19,7 +19,7 @@ bin/
 *.nar
 
 # ==========================================
-# Environment / Local Secrets
+# Environment / Local Secrets & Backups
 # ==========================================
 .env
 .env.local
@@ -27,6 +27,8 @@ bin/
 .env.test.local
 .env.production.local
 application-secret.properties
+*.pem
+*.sql
 
 # ==========================================
 # IDEs & Editor Configuration
